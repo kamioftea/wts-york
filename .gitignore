@@ -1,0 +1,17 @@
+logs
+target
+/.idea
+/.idea_modules
+/.classpath
+/.project
+/.settings
+/RUNNING_PID
+.sbtserver
+/node/bower_components
+/node/node_modules
+/public/javascripts/*
+/public/stylesheets/*
+/public/fonts/*
+/activator*
+/conf/*.local.*
+/game-state*.json

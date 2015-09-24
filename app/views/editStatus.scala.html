@@ -1,0 +1,63 @@
+@import uk.co.goblinoid.GameActor.{TerrorUpdate, PrUpdate}
+@import uk.co.goblinoid.GameState
+
+@import helper._
+
+@(status: GameState, terrorForm: Form[TerrorUpdate], prForm: Form[PrUpdate])(implicit messages: Messages)
+
+@main("Watch the Skies - York Science Fiction and Fantasy Society") {
+<div class="row">
+	<div class="small-12 large-3 large-push-9 columns">
+		<h1>World Terror Rank</h1>
+		<div class="panel callout">
+			@form(action = routes.Application.updateTerror()) {
+			@inputText(terrorForm("terror"))
+				<button class="button primary" type="submit">Submit</button>
+			}
+		</div>
+	</div>
+	<div class="small-12 large-9 large-pull-3 columns">
+		<div class="panel">
+			<div class="row">
+				<div class="small-12 large-5 columns text-center">
+					<h1>Turn: @status.turn</h1>
+				</div>
+				<div class="small-12 large-5 columns text-center">
+					<h1>Phase: @status.phase</h1>
+				</div>
+				<div class="small-12 large-2 columns text-right">
+					@form(action = routes.Application.reset()) {
+					<button class="button primary" type="submit">Reset</button>
+					}
+				</div>
+			</div>
+		</div>
+		<div class="row">
+			@for((countryName, countryPR) <- status.countryPRs) {
+				<div class="small-6 large-3 columns">
+					<div class="panel">
+						<h1 class="text-center"><small>@countryName</small></h1>
+						@defining(prForm.fill(PrUpdate(countryName, countryPR.pr))) { filledForm =>
+							@form(action = routes.Application.updatePr()) {
+								<input type="hidden" name="country" value="@filledForm("country").value">
+								@inputText(filledForm("pr"))
+								<button class="button primary" type="submit">Submit</button>
+							}
+						}
+						<h2 class="text-center">
+							@for((pr, income) <- countryPR.incomeLevels) {
+								@if(pr == countryPR.pr) {
+									<strong>@income</strong>
+								} else {
+									<small>@income</small>
+								}
+							}
+						</h2>
+
+					</div>
+				</div>
+			}
+		</div>
+	</div>
+</div>
+}
