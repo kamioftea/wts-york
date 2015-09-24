@@ -1,5 +1,5 @@
-Scala Goblinoid Node Dependencies
-=================================
+Node Dependencies
+=================
 
 This is internal to the wts project and is used to compile
 scss/js to minified/uglified concatenated files.
