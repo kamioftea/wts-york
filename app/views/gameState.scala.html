@@ -4,18 +4,13 @@
 @import java.time.format.{DateTimeFormatter}
 @import java.time.ZoneId
 
-@(status: GameState, tweets: Seq[Tweet])
 
-@main("Watch the Skies - York Science Fiction and Fantasy Society") {
+@(gameState: GameState, tweets: Seq[Tweet])
+
+@main("Watch the Skies - York Science Fiction and Fantasy Society", Seq(routes.Assets.versioned("javascripts/status.min.js"))) {
 <div class="row">
 	<div class="small-12 large-3 large-push-9 columns">
-		<h1>World Terror Rank</h1>
-		<div class="panel">
-			<div class="dial-container">
-				<img class="dial" src="@routes.Assets.versioned("images/dial.png")">
-				<div class="hand" style="transform: rotate(@(((status.terrorRank / 25) * 18) - 90)deg);"></div>
-			</div>
-		</div>
+		@status.worldTerror(gameState.terrorRank)
 		<h1>Latest News</h1>
 
 		@for(tweet <- tweets) {
@@ -29,15 +24,15 @@
 		<div class="panel">
 			<div class="row">
 				<div class="small-12 large-6 columns text-center">
-					<h1>Turn: @status.turn</h1>
+					<h1>Turn: @gameState.turn</h1>
 				</div>
 				<div class="small-12 large-6 columns text-center">
-					<h1>Phase: @status.phase</h1>
+					<h1>Phase: @gameState.phase</h1>
 				</div>
 			</div>
 		</div>
 		<div class="row">
-			@for((country_name, countryPR) <- status.countryPRs) {
+			@for((country_name, countryPR) <- gameState.countryPRs) {
 				<div class="small-6 large-3 columns">
 					<div class="panel">
 						<h1 class="text-center"><small>@country_name</small></h1>

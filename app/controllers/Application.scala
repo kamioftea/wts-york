@@ -43,28 +43,28 @@ class Application @Inject()(system: ActorSystem) extends Controller {
     Ok(views.html.index())
   }
 
-  def status = Action.async {
+  def gameState = Action.async {
     for {
-      status <- getStatus
+      gameState <- getGameState
       tweets <- getTweets
     } yield {
-      Ok(views.html.status(status, tweets))
+      Ok(views.html.gameState(gameState, tweets))
     }
   }
 
-  def editStatus = Action.async {
-    getStatus.map {
-      case status =>
-        Ok(views.html.editStatus(
-          status,
-          terrorForm.fill(TerrorUpdate(status.terrorRank)),
+  def editGameState = Action.async {
+    getGameState.map {
+      case gameState =>
+        Ok(views.html.editGameState(
+          gameState,
+          terrorForm.fill(TerrorUpdate(gameState.terrorRank)),
           prForm
         ))
     }
   }
 
-  def getStatus: Future[GameState] = {
-    (gameActor ? GetStatus()).mapTo[GameState]
+  def getGameState: Future[GameState] = {
+    (gameActor ? GetGameState()).mapTo[GameState]
   }
 
   def getTweets: Future[Seq[Tweet]] = {
@@ -89,11 +89,19 @@ class Application @Inject()(system: ActorSystem) extends Controller {
     )
   }
 
+  def terror() = Action.async {
+    for {
+      gameState <- getGameState
+    } yield {
+      Ok(views.html.status.worldTerror(gameState.terrorRank))
+    }
+  }
+
   def updateTerror() = Action(parse.form(terrorForm)) {
     implicit request =>
       val terrorUpdate = request.body
       gameActor ! terrorUpdate
-      Redirect(routes.Application.editStatus())
+      Redirect(routes.Application.editGameState())
   }
 
   val prForm: Form[PrUpdate] = {
@@ -109,11 +117,11 @@ class Application @Inject()(system: ActorSystem) extends Controller {
     implicit request =>
       val prUpdate = request.body
       gameActor ! prUpdate
-      Redirect(routes.Application.editStatus())
+      Redirect(routes.Application.editGameState())
   }
 
   def reset() = Action {
     gameActor ! Reset()
-    Redirect(routes.Application.editStatus())
+    Redirect(routes.Application.editGameState())
   }
 }

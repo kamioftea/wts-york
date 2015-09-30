@@ -3,7 +3,7 @@
 
 @import helper._
 
-@(status: GameState, terrorForm: Form[TerrorUpdate], prForm: Form[PrUpdate])(implicit messages: Messages)
+@(gameState: GameState, terrorForm: Form[TerrorUpdate], prForm: Form[PrUpdate])(implicit messages: Messages)
 
 @main("Watch the Skies - York Science Fiction and Fantasy Society") {
 <div class="row">
@@ -20,10 +20,10 @@
 		<div class="panel">
 			<div class="row">
 				<div class="small-12 large-5 columns text-center">
-					<h1>Turn: @status.turn</h1>
+					<h1>Turn: @gameState.turn</h1>
 				</div>
 				<div class="small-12 large-5 columns text-center">
-					<h1>Phase: @status.phase</h1>
+					<h1>Phase: @gameState.phase</h1>
 				</div>
 				<div class="small-12 large-2 columns text-right">
 					@form(action = routes.Application.reset()) {
@@ -33,7 +33,7 @@
 			</div>
 		</div>
 		<div class="row">
-			@for((countryName, countryPR) <- status.countryPRs) {
+			@for((countryName, countryPR) <- gameState.countryPRs) {
 				<div class="small-6 large-3 columns">
 					<div class="panel">
 						<h1 class="text-center"><small>@countryName</small></h1>

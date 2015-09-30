@@ -1,10 +1,10 @@
 {
-  "name": "homepage",
+  "name": "wts",
   "version": "0.0.0",
   "authors": [
     "Jeff Horton <jeff@goblinoid.co.uk>"
   ],
-  "description": "javascript/css management for my homepage",
+  "description": "javascript/css management for wts",
   "license": "MIT",
   "homepage": "www.goblinoid.co.uk",
   "ignore": [
@@ -16,7 +16,7 @@
   ],
   "dependencies": {
     "foundation": "~5.5.2",
-    "bacon": "~0.7.60",
+    "bacon": "~0.7.74",
     "components-font-awesome": "~4.3.0"
   }
 }

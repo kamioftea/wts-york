@@ -4,8 +4,9 @@
 
 # Home page
 GET     /                           controllers.Application.index
-GET     /status                     controllers.Application.status
-GET     /status/edit                controllers.Application.editStatus
+GET     /status                     controllers.Application.gameState
+GET     /status/edit                controllers.Application.editGameState
+GET     /status/terror              controllers.Application.terror
 POST    /status/terror              controllers.Application.updateTerror
 POST    /status/pr                  controllers.Application.updatePr
 POST    /status/reset               controllers.Application.reset

@@ -20,7 +20,7 @@ import scala.util.Try
 object GameActor {
   def props(file: Path) = Props(new GameActor(file: Path))
 
-  case class GetStatus()
+  case class GetGameState()
 
   case class TerrorUpdate(terror: Int)
 
@@ -74,7 +74,7 @@ class GameActor(file: Path) extends Actor {
   val state = stateFromFile.getOrElse(defaultState)
 
   def buildReceive(state: GameState): Receive = {
-    case GetStatus() =>
+    case GetGameState() =>
       sender() ! state
 
     case TerrorUpdate(newTerror) =>

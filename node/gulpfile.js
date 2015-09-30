@@ -1,13 +1,17 @@
 /**
  * Created by jeff on 23/03/2015.
  */
+var fs = require('fs');
 var gulp = require('gulp');
+var path = require('path');
 var sass = require('gulp-sass');
 var uglify = require('gulp-uglify');
 var concat = require('gulp-concat');
 var postcss = require('gulp-postcss');
 var sourcemaps = require('gulp-sourcemaps');
+var rename = require('gulp-rename');
 var autoprefixer = require('autoprefixer-core');
+var merge = require('merge-stream');
 
 var paths = {
 	styles:        ['./assets/styles/app.scss'],
@@ -24,10 +28,19 @@ var paths = {
 		'./bower_components/bacon/dist/Bacon.js',
 		'./assets/scripts/*'
 	],
+	script_folder_root: './assets/scripts',
+	scripts_destination: '../public/javascripts',
 	fonts: [
 		'./bower_components/components-font-awesome/fonts/*'
 	]
 };
+
+function getFolders(dir) {
+    return fs.readdirSync(dir)
+      .filter(function(file) {
+        return fs.statSync(path.join(dir, file)).isDirectory();
+      });
+}
 
 gulp.task('styles', function () {
 	return gulp.src(paths.styles)
@@ -45,21 +58,47 @@ gulp.task('fonts', function () {
 });
 
 gulp.task('scripts', function () {
-	gulp.src(paths.scripts)
-		.pipe(sourcemaps.init())
-		.pipe(uglify())
-		.pipe(concat('app.js'))
-		.pipe(sourcemaps.write('.'))
-		.pipe(gulp.dest('../public/javascripts'));
+    var folders = getFolders(paths.script_folder_root);
 
-	return gulp
+    var modules = folders.map(function(folder) {
+          // concat into foldername.js
+          // write to output
+          // minify
+          // rename to folder.min.js
+          // write to output again
+          // SEE: https://github.com/gulpjs/gulp/blob/master/docs/recipes/running-task-steps-per-folder.md
+          return gulp.src(path.join(paths.script_folder_root, folder, '/**/*.js'))
+            .pipe(sourcemaps.init())
+            .pipe(concat(folder + '.compiled.js'))
+            .pipe(uglify())
+            .pipe(rename(folder + '.min.js'))
+            .pipe(sourcemaps.write('.'))
+            .pipe(gulp.dest(paths.scripts_destination));
+       });
+
+	var root_and_bower = gulp.src(paths.scripts)
+		.pipe(sourcemaps.init())
+		.pipe(concat('app.js'))
+		.pipe(uglify())
+		.pipe(rename('app.min.js'))
+		.pipe(sourcemaps.write('.'))
+		.pipe(gulp.dest(paths.scripts_destination));
+
+	var modernizr = gulp
 		.src(['./bower_components/modernizr/modernizr.js'])
-		.pipe(gulp.dest('../public/javascripts'))
+		.pipe(sourcemaps.init())
+        .pipe(uglify())
+        .pipe(rename('modernizr.min.js'))
+        .pipe(sourcemaps.write('.'))
+		.pipe(gulp.dest(paths.scripts_destination))
+
+	return merge(modules, root_and_bower, modernizr);
 });
 
 gulp.task('watch', ['styles', 'scripts', 'fonts'], function () {
 	gulp.watch(paths.styles.concat(paths.styleIncludes), ['styles']);
 	gulp.watch(paths.scripts, ['scripts']);
+	gulp.watch(path.join(paths.script_folder_root, '/**/*.js'), ['scripts']);
 });
 
 gulp.task('default', ['watch']);

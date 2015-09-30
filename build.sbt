@@ -1,4 +1,4 @@
-name := """wts"""
+name := "wts"
 
 version := "1.0-SNAPSHOT"
 
