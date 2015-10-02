@@ -6,7 +6,12 @@ scss/js to minified/uglified concatenated files.
  
 Ideally this will eventually be migrated to use the sbt/webjars solution
 that comes with Play, but until I or someone else writes webjar wrappers 
-for the gulp tools I'm used to this will have to do
+for the gulp tools I'm used to this will have to do.
+
+Pre-requisite
+-------------
+
+ * [nodejs/npm](https://nodejs.org/en/)
 
 On initial download run 
 

@@ -10,14 +10,14 @@
             <h1 class="text-center">
                 <small>York Science Fiction and Fantasy Society Presents</small><br>
                 <span class="text-typewriter">Watch the Skies</span><br>
-                <small>7th November 2015</small>
+                <small>Saturday Week 6, 7th November 2015</small>
             </h1>
         </div>
     </div>
     <div class="row content">
         @flash.get("type") match {
             case Some(alertType) => {
-                <div class="small-12 columns">
+                <div class="small-12 columns content">
                     <br>
                     <div data-alert class="alert-box @alertType">
                         @flash.get("message").getOrElse(alertType)
@@ -30,14 +30,18 @@
 
         <div class="small-12 medium-6 columns">
             <h2>A Megagame of Alien Terror</h2>
-            <p>
+            <p class="lead">
                 Join sixty other players as world leaders responding to the alien menace.
-                Diplomats, Generals, and Scientists are all working to protect their
-                country, and the world, from the threat.
             </p>
             <p>
-                Or play as one of the other roles in the game. Be a member of the press
-                or one of the mysterious invading aliens.
+                Be one of the Diplomats, Generals, and Scientists working to protect their
+                country, and the world, from the threat. Or play as one of the other
+                roles in the game. Be a member of the press or one of the mysterious
+                invading aliens.
+            </p>
+            <p>
+                The game will run from 9am on Saturday, Week 6 (7th November). There are sixty
+                player slots available, contact us to book your place.
             </p>
         </div>
 
@@ -49,10 +53,10 @@
                     <div class="row">
                         <div class="large-12 columns">
                             <div class="row collapse">
-                                <div class="small-9 medium-10 columns">
+                                <div class="small-9 large-10 columns">
                                     <input type="text" name="email" value="@emailForm("email").value" placeholder="Enter your email address...">
                                 </div>
-                                <div class="small-3 medium-2 columns">
+                                <div class="small-3 large-2 columns">
                                     <button class="button primary postfix" type="submit">Send</button>
                                 </div>
                             </div>
@@ -65,7 +69,7 @@
                 <p>Or you can contact us using:</p>
                 <ul class="no-bullet">
                     <li><span class="fa fa-envelope-o icon"></span> <a href="mailto:WTSYorkUni@@gmail.com">WTSYorkUni@@gmail.com</a></li>
-                    <li><span class="fa fa-facebook icon"></span> [[ Link to facebook event here]]</li>
+                    <li><span class="fa fa-facebook icon"></span> <a href="https://www.facebook.com/events/899916173428741/">The Facebook event</a></li>
                 </ul>
             </div>
 
