@@ -1,6 +1,6 @@
 @import play.api.mvc.Call
 
-@(title: String, scripts: Seq[Call] = Seq(), bodyClass: String = "")(content: Html)
+@(title: Option[String] = None, scripts: Seq[Call] = Seq(), bodyClass: String = "")(content: Html)
 
 <!DOCTYPE html>
 
@@ -8,7 +8,7 @@
 <head>
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@title</title>
+    <title>@title.map(_ + " | ")Watch The Skies - York Uni</title>
     <link rel="stylesheet" media="screen" href='@routes.Assets.versioned("fonts/fonts.css")'>
     <link rel="stylesheet" media="screen" href='@routes.Assets.versioned("stylesheets/app.css")'>
     <link rel="shortcut icon" type="image/png" href='@routes.Assets.versioned("images/favicon.png")'>

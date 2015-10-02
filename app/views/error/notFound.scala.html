@@ -1,0 +1,31 @@
+@(url: String, message: String)
+
+@main(title = Some("404 - Not Found"), bodyClass = "with-stars") {
+    <div class="row heading">
+        <div class="small-12 columns">
+            <h1 class="text-center">
+                <span class="text-typewriter"><small>404</small> Page Not Found</span><br>
+                <small>@message</small>
+            </h1>
+        </div>
+    </div>
+
+    <div class="content">
+        <div class="row">
+            <div class="small-12 medium-8 medium-push-2 columns">
+                <p class="lead">Sorry the page @url doesn't exist.</p>
+                <p>
+                    Government sources tell us that it never did, though there are rumours that it
+                    has been abducted by aliens.
+                </p>
+                <p>
+                    If you are lost, the best place to start is the <a href="@routes.Application.index()">Home Page</a>.
+                </p>
+                <p>
+                    If you think this page should exist and there is an issue with the site, please let us know:
+                    <a href="mailto:WTSYorkUni@@gmail.com">WTSYorkUni@@gmail.com</a>.
+                </p>
+            </div>
+        </div>
+    </div>
+}
