@@ -1,7 +1,7 @@
 package uk.co.goblinoid
 
-import play.api.libs.functional.syntax._
-import play.api.libs.json.{Writes, JsPath, Reads}
+import _root_.play.api.libs.json.{Writes, JsPath, Reads}
+import _root_.play.api.libs.functional.syntax._
 
 import scala.collection.immutable.SortedMap
 
