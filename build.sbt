@@ -11,7 +11,8 @@ libraryDependencies ++= Seq(
   cache,
   ws,
   specs2 % Test,
-  "com.typesafe.play" %% "play-mailer" % "3.0.0-M1"
+  "com.typesafe.play" %% "play-mailer" % "3.0.0-M1", // Mail Client :    https://github.com/playframework/play-mailer
+  "jp.t2v" %% "play2-auth"        % "0.14.1"         // Authentication : https://github.com/t2v/play2-auth
 )
 
 resolvers ++= Seq(

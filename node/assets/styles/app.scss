@@ -18,6 +18,10 @@ body {
     max-width: 100%
 }
 
+.button.no-gap {
+    margin: 0;
+}
+
 .banner {
   min-height: 25rem;
   /* banner-small will be overwritten by interchange if javascript is running */
@@ -85,7 +89,7 @@ body {
     }
 }
 
-body.index-page {
+body.with-stars {
     background: url(/assets/images/sky-background-large.jpg) top center no-repeat #18111e;
 
     .heading {
@@ -111,11 +115,12 @@ body.index-page {
 
     .content {
         background: $vapor;
+        padding-top: 1rem;
     }
 }
 
 .icon {
     display: inline-block;
-    width: 2em;
+    width: 1.8em;
     text-align: center;
 }
