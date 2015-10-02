@@ -11,7 +11,7 @@ import java.time.format.DateTimeFormatter
 import java.time.LocalDateTime
 
 import akka.actor._
-import play.api.libs.json._
+import _root_.play.api.libs.json._
 
 import scala.collection.immutable.SortedMap
 import scala.util.Try
