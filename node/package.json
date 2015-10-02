@@ -15,6 +15,7 @@
     "del": "^2.0.2",
     "gulp": "^3.8.11",
     "gulp-concat": "^2.5.2",
+    "gulp-google-webfonts": "0.0.6",
     "gulp-postcss": "^5.1.8",
     "gulp-rename": "^1.2.2",
     "gulp-sass": "^2.0.1",

@@ -6,12 +6,12 @@
 @(gameState: GameState, terrorForm: Form[TerrorUpdate], prForm: Form[PrUpdate])(implicit messages: Messages)
 
 @main("Watch the Skies - York Science Fiction and Fantasy Society") {
-<div class="row">
+<div class="row full-width">
 	<div class="small-12 large-3 large-push-9 columns">
 		<h1>World Terror Rank</h1>
 		<div class="panel callout">
-			@form(action = routes.Application.updateTerror()) {
-			@inputText(terrorForm("terror"))
+			@form(action = routes.Status.updateTerror()) {
+				@inputText(terrorForm("terror"))
 				<button class="button primary" type="submit">Submit</button>
 			}
 		</div>
@@ -26,7 +26,7 @@
 					<h1>Phase: @gameState.phase</h1>
 				</div>
 				<div class="small-12 large-2 columns text-right">
-					@form(action = routes.Application.reset()) {
+					@form(action = routes.Status.reset()) {
 					<button class="button primary" type="submit">Reset</button>
 					}
 				</div>
@@ -38,7 +38,7 @@
 					<div class="panel">
 						<h1 class="text-center"><small>@countryName</small></h1>
 						@defining(prForm.fill(PrUpdate(countryName, countryPR.pr))) { filledForm =>
-							@form(action = routes.Application.updatePr()) {
+							@form(action = routes.Status.updatePr()) {
 								<input type="hidden" name="country" value="@filledForm("country").value">
 								@inputText(filledForm("pr"))
 								<button class="button primary" type="submit">Submit</button>

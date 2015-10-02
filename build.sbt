@@ -10,10 +10,13 @@ libraryDependencies ++= Seq(
   jdbc,
   cache,
   ws,
-  specs2 % Test
+  specs2 % Test,
+  "com.typesafe.play" %% "play-mailer" % "3.0.0-M1"
 )
 
-resolvers += "scalaz-bintray" at "http://dl.bintray.com/scalaz/releases"
+resolvers ++= Seq(
+  "scalaz-bintray" at "http://dl.bintray.com/scalaz/releases"
+)
 
 // Play provides two styles of routers, one expects its actions to be injected, the
 // other, legacy style, accesses its actions statically.

@@ -1,13 +1,74 @@
-@main("Watch the Skies - York Science Fiction and Fantasy Society") {
+@import helper._
+@import uk.co.goblinoid.EmailActor.SendRegistrationEmail
 
-    <div class="row">
+@(emailForm: Form[SendRegistrationEmail])(implicit flash: Flash, messages: Messages)
+
+@main("Watch the Skies - York Science Fiction and Fantasy Society", bodyClass = "index-page") {
+
+    <div class="row heading">
         <div class="small-12 columns">
-            <img src="@routes.Assets.versioned("images/wts-banner.png")">
-
-            <h1>
-                <small>York Science Fiction and Fantasy Society Presents</small><br />
-                Watch the Skies
+            <h1 class="text-center">
+                <small>York Science Fiction and Fantasy Society Presents</small><br>
+                <span class="text-typewriter">Watch the Skies</span><br>
+                <small>7th November 2015</small>
             </h1>
+        </div>
+    </div>
+    <div class="row content">
+        @flash.get("type") match {
+            case Some(alertType) => {
+                <div class="small-12 columns">
+                    <br>
+                    <div data-alert class="alert-box @alertType">
+                        @flash.get("message").getOrElse(alertType)
+                        <a href="#" class="close">&times;</a>
+                    </div>
+                </div>
+            }
+            case None => {  }
+        }
+
+        <div class="small-12 medium-6 columns">
+            <h2>A Megagame of Alien Terror</h2>
+            <p>
+                Join sixty other players as world leaders responding to the alien menace.
+                Diplomats, Generals, and Scientists are all working to protect their
+                country, and the world, from the threat.
+            </p>
+            <p>
+                Or play as one of the other roles in the game. Be a member of the press
+                or one of the mysterious invading aliens.
+            </p>
+        </div>
+
+        <div class="small-12 medium-6 columns">
+            <h2>Interested?</h2>
+            <div class="panel">
+                <p>Give us your email and we'll send you details of how to book.</p>
+                @form(action = routes.Application.sendEmail()) {
+                    <div class="row">
+                        <div class="large-12 columns">
+                            <div class="row collapse">
+                                <div class="small-9 medium-10 columns">
+                                    <input type="text" name="email" value="@emailForm("email").value" placeholder="Enter your email address...">
+                                </div>
+                                <div class="small-3 medium-2 columns">
+                                    <button class="button primary postfix" type="submit">Send</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <div class="panel">
+                <p>Or you can contact us using:</p>
+                <ul class="no-bullet">
+                    <li><span class="fa fa-envelope-o icon"></span> <a href="mailto:WTSYorkUni@@gmail.com">WTSYorkUni@@gmail.com</a></li>
+                    <li><span class="fa fa-facebook icon"></span> [[ Link to facebook event here]]</li>
+                </ul>
+            </div>
+
         </div>
     </div>
 

@@ -12,6 +12,7 @@ var sourcemaps = require('gulp-sourcemaps');
 var rename = require('gulp-rename');
 var autoprefixer = require('autoprefixer-core');
 var merge = require('merge-stream');
+var googleWebFonts = require('gulp-google-webfonts');
 
 var paths = {
 	styles:        ['./assets/styles/app.scss'],
@@ -23,7 +24,7 @@ var paths = {
 	scripts:       [
 		'./bower_components/jquery/dist/jquery.js',
 		'./bower_components/foundation/js/foundation/foundation.js',
-		'./bower_components/foundation/js/foundation/foundation.interchange.js',
+		'./bower_components/foundation/js/foundation/foundation.alert.js',
 		'./bower_components/fastclick/lib/fastclick.js',
 		'./bower_components/bacon/dist/Bacon.js',
 		'./assets/scripts/*'
@@ -32,7 +33,9 @@ var paths = {
 	scripts_destination: '../public/javascripts',
 	fonts: [
 		'./bower_components/components-font-awesome/fonts/*'
-	]
+	],
+	google_web_fonts: './assets/fonts.list',
+	fonts_destination: '../public/fonts'
 };
 
 function getFolders(dir) {
@@ -53,8 +56,14 @@ gulp.task('styles', function () {
 });
 
 gulp.task('fonts', function () {
-	return gulp.src(paths.fonts)
-		.pipe(gulp.dest('../public/fonts'))
+	var nodeFonts = gulp.src(paths.fonts)
+		.pipe(gulp.dest(paths.fonts_destination))
+
+	var webFonts = gulp.src(paths.google_web_fonts)
+        .pipe(googleWebFonts())
+        .pipe(gulp.dest(paths.fonts_destination));
+
+    return merge(nodeFonts, webFonts)
 });
 
 gulp.task('scripts', function () {

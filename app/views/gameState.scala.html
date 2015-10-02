@@ -8,7 +8,7 @@
 @(gameState: GameState, tweets: Seq[Tweet])
 
 @main("Watch the Skies - York Science Fiction and Fantasy Society", Seq(routes.Assets.versioned("javascripts/status.min.js"))) {
-<div class="row">
+<div class="row full-width">
 	<div class="small-12 large-3 large-push-9 columns">
 		@status.worldTerror(gameState.terrorRank)
 		<h1>Latest News</h1>

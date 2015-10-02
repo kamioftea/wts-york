@@ -13,5 +13,5 @@ target
 /public/stylesheets/*
 /public/fonts/*
 /activator*
-/conf/*.local.*
+/conf/*.local.conf
 /game-state*.json

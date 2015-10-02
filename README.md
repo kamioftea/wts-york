@@ -4,6 +4,12 @@ WTS Game Admin
 Small PlayFramework project to display a status page during the York SF&F Watch
 the Skies Game.
 
+Configuration
+-------------
+
+You will need to copy `config/application.local.config.dist` to `config/application.local.config`
+and provide the configuration specified.
+
 Node/Bower/Gulp
 ---------------
 

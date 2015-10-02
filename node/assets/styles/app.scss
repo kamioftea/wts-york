@@ -10,6 +10,14 @@ body {
   background-color: $vapor;
 }
 
+.text-typewriter {
+  font-family: $font-family-typewriter;
+}
+
+.row.full-width {
+    max-width: 100%
+}
+
 .banner {
   min-height: 25rem;
   /* banner-small will be overwritten by interchange if javascript is running */
@@ -75,4 +83,39 @@ body {
         background-color: black;
         transform-origin: center 103%;
     }
+}
+
+body.index-page {
+    background: url(/assets/images/sky-background-large.jpg) top center no-repeat #18111e;
+
+    .heading {
+        padding: 2rem 0;
+
+        @media #{$medium-only} {
+            padding: 4rem 0;
+        }
+
+        @media #{$large-up} {
+            padding: 6rem 0;
+        }
+
+
+        h1 {
+            color: $ghost;
+
+            small {
+               color: $base;
+            }
+        }
+    }
+
+    .content {
+        background: $ghost;
+    }
+}
+
+.icon {
+    display: inline-block;
+    width: 2em;
+    text-align: center;
 }
