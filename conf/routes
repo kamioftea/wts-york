@@ -7,6 +7,12 @@ GET     /                           controllers.Application.index
 GET     /register-email             controllers.Application.index
 POST    /register-email             controllers.Application.sendEmail
 
+#User/Auth
+
+GET     /user/login                 controllers.User.login
+POST    /user/login                 controllers.User.authenticate
+GET     /user/logout                controllers.User.logout
+
 # Status Page
 GET     /status                     controllers.Status.index
 GET     /status/edit                controllers.Status.editGameState

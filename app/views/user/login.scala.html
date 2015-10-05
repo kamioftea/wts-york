@@ -1,0 +1,60 @@
+@import uk.co.goblinoid.auth.Account
+@import helper._
+
+@(loginForm: Form[Account])(implicit flash: Flash, messages: Messages)
+
+@main() {
+<div class="row">
+    <div class="small-12 medium-8 medium-push-2 large-6 large-push-3 columns">
+        <h1>Authentication</h1>
+        <p class="lead">You need to login to access this page</p>
+
+        @flash.get("type") match {
+            case Some(alertType) => {
+                <div class="row">
+                    <div class="small-12 columns">
+                        <div data-alert class="alert-box @alertType">
+                            <span class="icon @flash.get("icon")"></span>
+                            <strong>@flash.get("type").map(_.capitalize):</strong>
+                            @flash.get("message").getOrElse(alertType)
+                            <a href="#" class="close">&times;</a>
+                        </div>
+                    </div>
+                </div>
+            }
+            case None => {  }
+        }
+
+        <div class="panel">
+            @form(action = routes.User.authenticate()) {
+                <div class="row">
+                    <div class="small-3 large-2 columns">
+                        <label for="username-input" class="inline right">
+                            Username:
+                        </label>
+                    </div>
+                    <div class="small-9 large-10 columns">
+                        <input type="text" name="username" id="username-input"
+                               value="@loginForm("username").value">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="small-3 large-2 columns">
+                        <label for="password-input" class="inline right">
+                            Password:
+                        </label>
+                    </div>
+                    <div class="small-9 large-10 columns">
+                        <input type="password" name="password" id="password-input">
+                    </div>
+                </div>
+            <div class="row">
+                <div class="small-12 columns text-right">
+                    <button class="button primary no-gap" type="submit">Login</button>
+                </div>
+            </div>
+            }
+        </div>
+    </div>
+</div>
+}
