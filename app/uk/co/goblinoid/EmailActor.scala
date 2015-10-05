@@ -1,5 +1,6 @@
 package uk.co.goblinoid
 
+import _root_.play.api.Logger
 import _root_.play.api.libs.mailer.{Email, MailerClient}
 import akka.actor._
 
@@ -23,7 +24,6 @@ object EmailActor {
  *
  * Created by Jeff on 01/10/2015.
  */
-// todo: Create mailer client from config
 class EmailActor(mailerClient: MailerClient) extends Actor {
 
   import EmailActor._
@@ -44,7 +44,9 @@ class EmailActor(mailerClient: MailerClient) extends Actor {
         mailerClient.send(email)
       } match {
         case Success(_) => sender() ! SendEmailSuccess()
-        case Failure(error) => sender() ! SendEmailFailure()
+        case Failure(error) =>
+          Logger.error(error.getMessage, error)
+          sender() ! SendEmailFailure()
       }
   }
 }
