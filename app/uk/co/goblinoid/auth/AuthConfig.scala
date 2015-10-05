@@ -52,7 +52,6 @@ trait AuthConfig extends BaseAuthConfig {
    */
   def resolveUser(id: Id)(implicit ctx: ExecutionContext): Future[Option[User]] = Future.successful(
     id match {
-      // TODO: Load from db
       case "admin" => Some(Account("Admin", Admin))
       case "guest" => Some(Account("Guest", Guest))
       case _ => None
@@ -62,32 +61,41 @@ trait AuthConfig extends BaseAuthConfig {
   /**
    * Where to redirect the user after a successful login.
    */
-  def loginSucceeded(request: RequestHeader)(implicit ctx: ExecutionContext): Future[Result] =
-    Future.successful(Results.Redirect(routes.Application.index()).flashing(
-      "icon" -> "fa fa-check-circle",
-      "type" -> "success",
-      "message" -> "You have successfully logged in."
-    ))
+  def loginSucceeded(request: RequestHeader)(implicit ctx: ExecutionContext): Future[Result] = {
+    val uri =
+      request.session.get("access_uri")
+        .filterNot(_ == routes.User.login().url)
+        .getOrElse(routes.Application.index().url)
+
+    Future.successful(
+      Results.Redirect(uri)
+        .flashing(
+          "icon" -> "fa fa-check-circle",
+          "type" -> "success",
+          "message" -> "You have successfully logged in.")
+        .withSession(request.session - "access_uri")
+    )
+  }
 
   /**
    * Where to redirect the user after logging out
    */
   def logoutSucceeded(request: RequestHeader)(implicit ctx: ExecutionContext): Future[Result] =
-    Future.successful(Results.Redirect(routes.User.login()).flashing(
-      "icon" -> "fa fa-check-circle",
-      "type" -> "success",
-      "message" -> "You have successfully logged out."
-    ))
+    Future.successful(Results.Redirect(routes.User.login()))
 
   /**
    * If the user is not logged in and tries to access a protected resource then redirect them as follows:
    */
-  def authenticationFailed(request: RequestHeader)(implicit ctx: ExecutionContext): Future[Result] =
-    Future.successful(Results.Redirect(routes.User.login()).flashing(
-      "icon" -> "fa fa-times-circle",
-      "type" -> "alert",
-      "message" -> "Username or password invalid."
-    ))
+  def authenticationFailed(request: RequestHeader)(implicit ctx: ExecutionContext): Future[Result] = {
+    val access_uri =
+      if (request.uri == routes.User.login().url) request.session.get("request_uri").getOrElse(routes.Application.index().url)
+      else request.uri
+    
+    Future.successful(
+      Results.Redirect(routes.User.login())
+        .withSession("access_uri" -> access_uri)
+    )
+  }
 
   /**
    * If authorization failed (usually incorrect password) redirect the user as follows:
@@ -118,7 +126,8 @@ trait AuthConfig extends BaseAuthConfig {
      * Whether use the secure option or not use it in the cookie.
      * Following code is default.
      */
-    cookieSecureOption = play.api.Play.isProd(play.api.Play.current),
+    // The data available by logging on is not worth protecting with an SSL certificate
+    cookieSecureOption = false,
     cookieMaxAge = Some(sessionTimeoutInSeconds)
   )
 

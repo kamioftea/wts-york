@@ -6,7 +6,7 @@
 @main() {
 <div class="row">
     <div class="small-12 medium-8 medium-push-2 large-6 large-push-3 columns">
-        <h1>Authentication</h1>
+        <h2>Authentication Required</h2>
         <p class="lead">You need to login to access this page</p>
 
         @flash.get("type") match {
@@ -55,6 +55,9 @@
             </div>
             }
         </div>
+        <p>
+            Alternatively head back to the <a href="@routes.Application.index()">Homepage</a>.
+        </p>
     </div>
 </div>
 }
