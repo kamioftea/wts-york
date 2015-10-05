@@ -94,7 +94,7 @@ gulp.task('scripts', function () {
 		.pipe(gulp.dest(paths.scripts_destination));
 
 	var modernizr = gulp
-		.src(['./bower_components/modernizr/modernizr.js'])
+		.src(['./bower_components/foundation/js/vendor/modernizr.js'])
 		.pipe(sourcemaps.init())
         .pipe(uglify())
         .pipe(rename('modernizr.min.js'))
