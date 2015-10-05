@@ -8,18 +8,17 @@ GET     /register-email             controllers.Application.index
 POST    /register-email             controllers.Application.sendEmail
 
 #User/Auth
-
 GET     /user/login                 controllers.User.login
 POST    /user/login                 controllers.User.authenticate
 GET     /user/logout                controllers.User.logout
 
 # Status Page
-#GET     /status                     controllers.Status.index
-#GET     /status/edit                controllers.Status.editGameState
-#GET     /status/terror              controllers.Status.terror
-#POST    /status/terror              controllers.Status.updateTerror
-#POST    /status/pr                  controllers.Status.updatePr
-#POST    /status/reset               controllers.Status.reset
+GET     /status                     controllers.Status.index
+GET     /status/edit                controllers.Status.editGameState
+GET     /status/terror              controllers.Status.terror
+POST    /status/terror              controllers.Status.updateTerror
+POST    /status/pr                  controllers.Status.updatePr
+POST    /status/reset               controllers.Status.reset
 
 # Map static resources from the /public folder to the /assets URL path
 GET     /assets/*file               controllers.Assets.versioned(path="/public", file: Asset)
