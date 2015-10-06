@@ -126,17 +126,20 @@ body.with-stars {
     text-align: center;
 }
 
-.pr-list {
-    .pr-item {
-        line-height: $h3-font-size * 1.34;
-        font-size: $h5-font-size;
-        text-align: center;
-        padding-bottom: 0;
+h3.pr-country-name {
+    line-height: $h3-font-size * 1.5;
+    margin: 0;
+}
 
-        &.current{
-            line-height: $h2-font-size;
-            font-size: $h3-font-size;
-            font-weight: bold;
-        }
+.pr-list .pr-item {
+    line-height: $h3-font-size * 1.75;
+    font-size: $h5-font-size;
+    text-align: center;
+    padding-bottom: 0;
+
+    &.current{
+        line-height: $h1-font-size;
+        font-size: $h1-font-size;
+        font-weight: bold;
     }
 }
