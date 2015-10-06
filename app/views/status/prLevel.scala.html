@@ -1,0 +1,22 @@
+@import uk.co.goblinoid.CountryPR
+
+@(countryName: String, countryPR: CountryPR)
+
+<div class="small-12 columns">
+    <div class="panel">
+        <div class="row">
+            <div class="small-3 columns">
+                <h3 class="">@countryName</h3>
+            </div>
+            <div class="small-9 columns">
+                <ul class="small-block-grid-9 pr-list" data-country="@countryName">
+                    @for((pr, income) <- countryPR.incomeLevels) {
+                        <li class="pr-item @if(pr == countryPR.pr){current}" data-pr-level="@pr">
+                            @income
+                        </li>
+                    }
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
