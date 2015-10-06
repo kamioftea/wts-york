@@ -94,7 +94,7 @@ gulp.task('scripts', function () {
 		.pipe(gulp.dest(paths.scripts_destination));
 
 	var modernizr = gulp
-		.src(['./bower_components/modernizr/modernizr.js'])
+		.src(['./bower_components/foundation/js/vendor/modernizr.js'])
 		.pipe(sourcemaps.init())
         .pipe(uglify())
         .pipe(rename('modernizr.min.js'))
@@ -104,7 +104,9 @@ gulp.task('scripts', function () {
 	return merge(modules, root_and_bower, modernizr);
 });
 
-gulp.task('watch', ['styles', 'scripts', 'fonts'], function () {
+gulp.task('build', ['styles', 'scripts', 'fonts']);
+
+gulp.task('watch', ['build'], function () {
 	gulp.watch(paths.styles.concat(paths.styleIncludes), ['styles']);
 	gulp.watch(paths.scripts, ['scripts']);
 	gulp.watch(path.join(paths.script_folder_root, '/**/*.js'), ['scripts']);

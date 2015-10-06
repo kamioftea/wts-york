@@ -15,3 +15,4 @@ target
 /activator*
 /conf/*.local.conf
 /game-state*.json
+*.log
