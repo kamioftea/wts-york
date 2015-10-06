@@ -24,5 +24,20 @@ $(function(){
             	transform: 'rotate(' + rotation + 'deg)'
             });
 		})
-	})
+	});
+
+	$('.pr-list').each(function(){
+		var $list = $(this)
+		var countryName = $list.data('country');
+
+		updateStream.onValue(function(gameStatus)
+	    {
+	        if(gameStatus.countryPRs !== undefined && gameStatus.countryPRs[countryName] !== undefined)
+	        {
+	            var newPr = gameStatus.countryPRs[countryName];
+	            $list.find('.pr-item').removeClass('current');
+	            $list.find('.pr-item[data-pr-level=' + newPr + ']').addClass('current');
+	        }
+	    });
+	});
 });
