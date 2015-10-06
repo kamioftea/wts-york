@@ -35,13 +35,17 @@ class User extends Controller with LoginLogout with AuthConfig {
    * Since the `gotoLogoutSucceeded` returns `Future[Result]`,
    * you can add a procedure like the following.
    *
-   *   gotoLogoutSucceeded.map(_.flashing(
-   *     "success" -> "You've been logged out"
-   *   ))
+   * gotoLogoutSucceeded.map(_.flashing(
+   * "success" -> "You've been logged out"
+   * ))
    */
   def logout = Action.async { implicit request =>
     // do something...
-    gotoLogoutSucceeded
+    gotoLogoutSucceeded.map(_.flashing(
+      "icon" -> "fa fa-check-circle",
+      "type" -> "success",
+      "message" -> "You have successfully logged out."
+    ))
   }
 
   /**
@@ -52,10 +56,18 @@ class User extends Controller with LoginLogout with AuthConfig {
    */
   def authenticate = Action.async { implicit request =>
     loginForm.bindFromRequest.fold(
-      formWithErrors => {
-        authenticationFailed(request)
-      },
-      user => gotoLoginSucceeded(user.name)
+      formWithErrors =>
+        authenticationFailed(request).map(_.flashing(
+          "icon" -> "fa fa-times-circle",
+          "type" -> "alert",
+          "message" -> "Username or password invalid."
+        )),
+      user =>
+        gotoLoginSucceeded(user.name).map(_.flashing(
+          "icon" -> "fa fa-check-circle",
+          "type" -> "success",
+          "message" -> "You have successfully logged in."
+        ))
     )
   }
 
