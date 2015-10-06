@@ -4,13 +4,12 @@
 @import java.time.format.{DateTimeFormatter}
 @import java.time.ZoneId
 
-
 @(gameState: GameState, tweets: Seq[Tweet])
 
 @main(scripts = Seq(routes.Assets.versioned("javascripts/status.min.js"))) {
 <div class="row full-width">
 	<div class="small-12 large-3 large-push-9 columns">
-		@status.worldTerror(gameState.terrorRank)
+		@status.worldTerror(gameState.terrorLevel(-90, 90, 25))
 		<h1>Latest News</h1>
 
 		@for(tweet <- tweets) {

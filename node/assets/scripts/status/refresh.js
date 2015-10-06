@@ -1,19 +1,28 @@
 $(function(){
-	var url = '/status/terror'; //todo reverse routing in JS
+	var url = '/status.json'; //todo reverse routing in JS
 	var interval = 5000; // 5 seconds
-	var terrorHands = $('.world-terror-dial .hand');
-
-	function updateDial(content)
-	{
-		var hand = $(content).find('.hand');
-		$('.world-terror-dial .hand').replaceWith(hand);
-	}
 
 	function getAjaxResponse(request) {
         return Bacon.fromPromise($.ajax(request))
     }
 
-	Bacon.interval(interval, {url: url})
-		.flatMap(getAjaxResponse)
-		.onValue(updateDial);
+	var request = {url: url}
+
+	var updateStream =
+	    Bacon.once(request)
+			.merge(Bacon.interval(interval, request))
+			.flatMap(getAjaxResponse);
+
+	$('.world-terror-dial .hand').each(function(){
+		var $hand = $(this);
+
+		updateStream.onValue(function(gameStatus)
+		{
+			var rotation = gameStatus.terrorLevel === undefined ? -90 : gameStatus.terrorLevel;
+
+			$hand.css({
+            	transform: 'rotate(' + rotation + 'deg)'
+            });
+		})
+	})
 });

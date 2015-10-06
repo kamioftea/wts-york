@@ -1,7 +1,7 @@
 package controllers
 
 import java.nio.file.Paths
-import javax.inject.{Singleton, _}
+import javax.inject._
 
 import akka.actor._
 import akka.pattern.ask
@@ -11,6 +11,7 @@ import play.api.Play.current
 import play.api.data.Forms._
 import play.api.data._
 import play.api.i18n.Messages.Implicits._
+import play.api.libs.json._
 import play.api.libs.oauth.OAuthCalculator
 import play.api.libs.ws.WS
 import play.api.mvc._
@@ -44,9 +45,20 @@ class Status @Inject()(system: ActorSystem) extends Controller with AuthElement 
     }
   }
 
+  def buildGameStateJson(state: GameState) = Json.obj(
+    "terrorLevel" -> state.terrorLevel(-90, 90, 25)
+  )
+
+  def gameState = AsyncStack(AuthorityKey -> Admin) { _ =>
+    getGameState map { gameState =>
+      val json = buildGameStateJson(gameState)
+
+      Ok(json)
+    }
+  }
+
   def editGameState = AsyncStack(AuthorityKey -> Admin) { _ =>
-    getGameState.map {
-      case gameState =>
+    getGameState map { gameState =>
         Ok(views.html.editGameState(
           gameState,
           terrorForm.fill(TerrorUpdate(gameState.terrorRank)),
@@ -79,14 +91,6 @@ class Status @Inject()(system: ActorSystem) extends Controller with AuthElement 
         "terror" -> number(min = 0, max = 250)
       )(TerrorUpdate.apply)(TerrorUpdate.unapply)
     )
-  }
-
-  def terror() = AsyncStack(AuthorityKey -> Admin) { _ =>
-    for {
-      gameState <- getGameState
-    } yield {
-      Ok(views.html.status.worldTerror(gameState.terrorRank))
-    }
   }
 
   def updateTerror() = StackAction(AuthorityKey -> Admin) { request =>

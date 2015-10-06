@@ -71,7 +71,7 @@ body {
   background-color: $crumb-bg;
 }
 
-.dial-container{
+.dial-container {
     position: relative;
 
     .dial {
@@ -85,7 +85,9 @@ body {
         left: 50%;
         width: 12px;
         background-color: black;
+        transform: rotate(-90deg);
         transform-origin: center 103%;
+        transition: transform 0.5s ease-in-out;
     }
 }
 

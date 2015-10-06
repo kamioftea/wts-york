@@ -1,4 +1,4 @@
-@(terrorRank: Int)
+@(terrorLevel: Int)
 
 <div class="world-terror-dial">
     <h1>World Terror Rank</h1>
@@ -6,7 +6,7 @@
     <div class="panel">
         <div class="dial-container">
             <img class="dial" src="@routes.Assets.versioned("images/dial.png")">
-            <div class="hand" style="transform: rotate(@(((terrorRank / 25) * 18) - 90)deg);"></div>
+            <div class="hand"></div>
         </div>
     </div>
 </div>

@@ -1,5 +1,6 @@
 package uk.co.goblinoid
 
+import _root_.play.api.Logger
 import _root_.play.api.libs.json.{Writes, JsPath, Reads}
 import _root_.play.api.libs.functional.syntax._
 
@@ -7,13 +8,13 @@ import scala.collection.immutable.SortedMap
 
 case class GameState(turn: Int, phase: Int, terrorRank: Int, countryPRs: SortedMap[String, CountryPR]) {
 
-  lazy val terrorState = {
-    if (terrorRank < 50) "Good"
-    else if (terrorRank < 100) "Ok"
-    else if (terrorRank < 150) "Not So Good"
-    else if (terrorRank < 200) "Global Panic"
-    else if (terrorRank < 250) "Global Terror"
-    else "Global Collapse"
+  def terrorLevel(min: Int, max: Int, step: Int = 1): Int = {
+    if (step == 0) throw new IllegalArgumentException("Step must not be 0")
+
+    val step_factor = GameState.TERROR_RANK_MAX / step
+
+    if (step_factor == 0) max
+    else (terrorRank / step) * ((max - min) / step_factor) + min
   }
 
   def withTerror(newTerror: Int) = GameState(turn, phase, newTerror, countryPRs)
@@ -23,6 +24,10 @@ case class GameState(turn: Int, phase: Int, terrorRank: Int, countryPRs: SortedM
     case None => this
   }
 
+}
+
+object GameState {
+  val TERROR_RANK_MAX = 250
 }
 
 case class CountryPR(pr: Int, incomeLevels: SortedMap[Int, Int]) {
