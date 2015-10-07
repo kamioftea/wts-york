@@ -18,7 +18,7 @@ import scala.util.Try
 
 
 object GameActor {
-  def props(file: Path) = Props(new GameActor(file: Path))
+  def props(state_file: Path) = Props(new GameActor(state_file))
 
   case class GetGameState()
 
@@ -29,7 +29,7 @@ object GameActor {
   case class Reset()
 }
 
-class GameActor(file: Path) extends Actor {
+class GameActor(state_file: Path) extends Actor {
 
   import GameActor._
   import context._
@@ -38,37 +38,36 @@ class GameActor(file: Path) extends Actor {
 
   val defaultState = GameState(
     turn = 1,
-    phase = 1,
-    terrorRank = 23,
+    phaseIndex = 0,
+    terrorLevel = 23,
     countryPRs = SortedMap(
-      "Brazil" -> CountryPR(4, SortedMap(1 -> 2, 2 -> 4, 3 -> 6, 4 -> 8, 5 -> 10, 6 -> 12, 7 -> 14, 8 -> 16)),
-      "China" -> CountryPR(5, SortedMap(1 -> 2, 2 -> 5, 3 -> 8, 4 -> 11, 5 -> 14, 6 -> 17, 7 -> 20, 8 -> 23)),
-      "France" -> CountryPR(6, SortedMap(1 -> 2, 2 -> 4, 3 -> 6, 4 -> 8, 5 -> 10, 6 -> 12, 7 -> 14, 8 -> 16)),
-      "India" -> CountryPR(4, SortedMap(1 -> 2, 2 -> 4, 3 -> 6, 4 -> 8, 5 -> 10, 6 -> 12, 7 -> 14, 8 -> 16)),
-      "Japan" -> CountryPR(7, SortedMap(1 -> 2, 2 -> 5, 3 -> 8, 4 -> 11, 5 -> 14, 6 -> 17, 7 -> 20, 8 -> 23)),
-      "Russia" -> CountryPR(2, SortedMap(1 -> 2, 2 -> 4, 3 -> 6, 4 -> 8, 5 -> 10, 6 -> 12, 7 -> 14, 8 -> 16)),
-      "UK" -> CountryPR(5, SortedMap(1 -> 2, 2 -> 5, 3 -> 8, 4 -> 11, 5 -> 14, 6 -> 17, 7 -> 20, 8 -> 23)),
-      "USA" -> CountryPR(6, SortedMap(1 -> 2, 2 -> 5, 3 -> 8, 4 -> 11, 5 -> 14, 6 -> 17, 7 -> 20, 8 -> 23))
+      "Brazil" -> CountryPR(6, SortedMap(1 -> 3, 2 -> 5, 3 -> 7, 4 -> 9, 5 -> 12, 6 -> 14, 7 -> 16, 8 -> 18, 9 -> 20)),
+      "China" -> CountryPR(6, SortedMap(1 -> 5, 2 -> 7, 3 -> 9, 4 -> 12, 5 -> 15, 6 -> 18, 7 -> 21, 8 -> 23, 9 -> 26)),
+      "France" -> CountryPR(6, SortedMap(1 -> 4, 2 -> 6, 3 -> 8, 4 -> 10, 5 -> 13, 6 -> 15, 7 -> 17, 8 -> 19, 9 -> 21)),
+      "India" -> CountryPR(6, SortedMap(1 -> 3, 2 -> 5, 3 -> 7, 4 -> 9, 5 -> 11, 6 -> 14, 7 -> 16, 8 -> 18, 9 -> 20)),
+      "Japan" -> CountryPR(6, SortedMap(1 -> 4, 2 -> 6, 3 -> 8, 4 -> 10, 5 -> 13, 6 -> 16, 7 -> 18, 8 -> 21, 9 -> 23)),
+      "Russia" -> CountryPR(6, SortedMap(1 -> 3, 2 -> 5, 3 -> 7, 4 -> 9, 5 -> 11, 6 -> 13, 7 -> 15, 8 -> 17, 9 -> 18)),
+      "UK" -> CountryPR(6, SortedMap(1 -> 4, 2 -> 6, 3 -> 8, 4 -> 10, 5 -> 13, 6 -> 15, 7 -> 17, 8 -> 19, 9 -> 21)),
+      "US" -> CountryPR(6, SortedMap(1 -> 5, 2 -> 8, 3 -> 11, 4 -> 14, 5 -> 16, 6 -> 19, 7 -> 22, 8 -> 25, 9 -> 28))
     )
   )
 
-  def stateFromFile: Option[GameState] = {
-    Try {
-      val json = Files.readAllBytes(file)
-      Json.parse(json).validate[GameState].get
-    }.toOption
-  }
+  def stateFromFile: Option[GameState] = Try {
+    val json = Files.readAllBytes(state_file)
+    Json.parse(json).validate[GameState].get
+  }.toOption
+
 
   def stateToFile(state: GameState): Unit = {
-    Files.write(file, Json.stringify(Json.toJson(state)).getBytes(StandardCharsets.UTF_8))
+    Files.write(state_file, Json.stringify(Json.toJson(state)).getBytes(StandardCharsets.UTF_8))
   }
 
   def backupState(state: GameState): Unit = {
-    val (base, ext) = file.getFileName.toString.span(_.toString != ".")
-    val backupFile = file.resolveSibling(base + LocalDateTime.now.format(DateTimeFormatter.ofPattern("-yyyy-MM-dd-HH-mm-ss")) + ext)
+    val (base, ext) = state_file.getFileName.toString.span(_.toString != ".")
+    val backupFile = state_file.resolveSibling(base + LocalDateTime.now.format(DateTimeFormatter.ofPattern("-yyyy-MM-dd-HH-mm-ss")) + ext)
 
     if (Files.notExists(backupFile))
-      Files.copy(file, backupFile)
+      Files.copy(state_file, backupFile)
   }
 
   val state = stateFromFile.getOrElse(defaultState)

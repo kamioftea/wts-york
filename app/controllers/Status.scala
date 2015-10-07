@@ -46,7 +46,7 @@ class Status @Inject()(system: ActorSystem) extends Controller with AuthElement 
   }
 
   def buildGameStateJson(state: GameState) = Json.obj(
-    "terrorLevel" -> state.terrorLevel(-90, 90, 25),
+    "terrorLevel" -> state.terrorStep(-90, 90, 25),
     "countryPRs" -> state.countryPRs.mapValues(_.pr)
   )
 
@@ -62,7 +62,7 @@ class Status @Inject()(system: ActorSystem) extends Controller with AuthElement 
     getGameState map { gameState =>
         Ok(views.html.editGameState(
           gameState,
-          terrorForm.fill(TerrorUpdate(gameState.terrorRank)),
+          terrorForm.fill(TerrorUpdate(gameState.terrorLevel)),
           prForm
         ))
     }
