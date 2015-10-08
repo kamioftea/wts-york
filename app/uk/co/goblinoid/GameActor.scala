@@ -10,26 +10,42 @@ import java.nio.file.{Files, Path}
 import java.time.format.DateTimeFormatter
 import java.time.LocalDateTime
 
+import _root_.play.Logger
 import akka.actor._
 import _root_.play.api.libs.json._
+import scala.concurrent.duration._
+import scala.language.postfixOps
 
 import scala.collection.immutable.SortedMap
-import scala.util.Try
+import scala.util.{Failure, Success, Try}
 
 
 object GameActor {
-  def props(state_file: Path) = Props(new GameActor(state_file))
+  def props(stateFile: Path) = Props(new GameActor(stateFile))
 
-  case class GetGameState()
+  sealed trait GameActorMessage
 
-  case class TerrorUpdate(terror: Int)
+  case class GetGameState() extends GameActorMessage
 
-  case class PrUpdate(country: String, pr: Int)
+  case class TerrorUpdate(terror: Int) extends GameActorMessage
 
-  case class Reset()
+  case class PrUpdate(country: String, pr: Int) extends GameActorMessage
+
+  case class AdvancePhase() extends GameActorMessage
+
+  case class RegressPhase() extends GameActorMessage
+
+  case class Tick() extends GameActorMessage
+
+  case class Start() extends GameActorMessage
+
+  case class Pause() extends GameActorMessage
+
+  case class Reset() extends GameActorMessage
+
 }
 
-class GameActor(state_file: Path) extends Actor {
+class GameActor(stateFile: Path) extends Actor {
 
   import GameActor._
   import context._
@@ -53,44 +69,106 @@ class GameActor(state_file: Path) extends Actor {
   )
 
   def stateFromFile: Option[GameState] = Try {
-    val json = Files.readAllBytes(state_file)
+    val json = Files.readAllBytes(stateFile)
     Json.parse(json).validate[GameState].get
-  }.toOption
-
-
-  def stateToFile(state: GameState): Unit = {
-    Files.write(state_file, Json.stringify(Json.toJson(state)).getBytes(StandardCharsets.UTF_8))
+  } match {
+    case Success(gameState) => Some(gameState)
+    case Failure(error) =>
+      Logger.error("Failed to read file", error)
+      None
   }
 
-  def backupState(state: GameState): Unit = {
-    val (base, ext) = state_file.getFileName.toString.span(_.toString != ".")
-    val backupFile = state_file.resolveSibling(base + LocalDateTime.now.format(DateTimeFormatter.ofPattern("-yyyy-MM-dd-HH-mm-ss")) + ext)
-
-    if (Files.notExists(backupFile))
-      Files.copy(state_file, backupFile)
+  def stateToFile(state: GameState): Unit = {
+    Files.write(stateFile, Json.stringify(Json.toJson(state.paused())).getBytes(StandardCharsets.UTF_8))
   }
 
   val state = stateFromFile.getOrElse(defaultState)
 
-  def buildReceive(state: GameState): Receive = {
+  def backupState(state: GameState): Unit = {
+    val (base, ext) = stateFile.getFileName.toString.span(_.toString != ".")
+    val backupFile = stateFile.resolveSibling(base + LocalDateTime.now.format(DateTimeFormatter.ofPattern("-yyyy-MM-dd-HH-mm-ss")) + ext)
+
+    if (Files.notExists(stateFile))
+      stateToFile(state)
+
+    if (Files.notExists(backupFile))
+      Files.copy(stateFile, backupFile)
+  }
+
+  val ticker: Option[Cancellable] = None
+
+  def buildReceive(state: GameState, ticker: Option[Cancellable]): Receive = {
     case GetGameState() =>
       sender() ! state
 
     case TerrorUpdate(newTerror) =>
       val newState: GameState = state.withTerror(newTerror)
       stateToFile(newState)
-      become(buildReceive(newState))
+      
+      become(buildReceive(newState, ticker))
 
     case PrUpdate(country, newPr) =>
       val newState: GameState = state.withCountryPr(country, newPr)
       stateToFile(newState)
-      become(buildReceive(newState))
+      
+      become(buildReceive(newState, ticker))
+
+    case AdvancePhase() =>
+      backupState(state)
+      val newState = state.advancePhase()
+      stateToFile(newState)
+      
+      become(buildReceive(newState, ticker))
+
+    case RegressPhase() =>
+      backupState(state)
+      val newState = state.regressPhase()
+      stateToFile(newState)
+      
+      become(buildReceive(newState, ticker))
+
+    case Tick() => (state.phaseEnd, state.pauseStart) match {
+      case (Some(phaseEnd), None) if LocalDateTime.now isAfter phaseEnd =>
+        backupState(state)
+        become(buildReceive(state.advancePhase(), ticker))
+        
+      case _ =>
+        become(buildReceive(state, ticker))
+    }
+
+    case Start() =>
+      val newTicker = ticker match {
+        case Some(existing) if !existing.isCancelled => ticker
+        case _ =>
+          Some(
+            system.scheduler.schedule(1 second, 1 second, self, Tick())
+          )
+      }
+      
+      backupState(state)
+      val newState = state.started()
+      stateToFile(newState)
+      
+      become(buildReceive(newState, newTicker))
+
+    case Pause() =>
+      ticker.foreach(_.cancel())
+
+      backupState(state)
+      val newState = state.paused()
+      stateToFile(newState)
+
+      become(buildReceive(newState, None))
 
     case Reset() =>
+      ticker.foreach(_.cancel())
+      
       backupState(state)
-      stateToFile(defaultState)
-      become(buildReceive(defaultState))
+      val newState = defaultState.stopped()
+      stateToFile(newState)
+      
+      become(buildReceive(newState, None))
   }
 
-  def receive = buildReceive(state)
+  def receive = buildReceive(state, None)
 }

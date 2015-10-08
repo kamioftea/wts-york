@@ -1,6 +1,6 @@
 package uk.co.goblinoid
 
-import java.time.LocalDateTime
+import java.time.{Duration, LocalDateTime}
 import java.time.format.DateTimeFormatter
 
 import _root_.play.api.libs.json._
@@ -8,14 +8,11 @@ import _root_.play.api.libs.functional.syntax._
 
 import scala.collection.immutable.SortedMap
 
-import scala.concurrent.duration._
-import scala.language.postfixOps
-
 case class GameState(turn: Int,
                      phaseIndex: Int,
                      terrorLevel: Int,
                      countryPRs: SortedMap[String, CountryPR],
-                     phaseStart: Option[LocalDateTime] = None,
+                     phaseEnd: Option[LocalDateTime] = None,
                      pauseStart: Option[LocalDateTime] = None) {
   // phaseIndex is 1 indexed due to game labelling
   lazy val phase =
@@ -23,7 +20,7 @@ case class GameState(turn: Int,
       Phase.phases(phaseIndex - 1)
     else
       // TODO: Load from config
-      Phase("Watch the Skies hasn't started yet", Seq(Activity("Starts", "9am, 7th November 2015")), 0 seconds)
+      Phase("Watch the Skies hasn't started yet", Seq(Activity("Starts", "9am, 7th November 2015")), Duration.ZERO)
 
   def terrorStep(min: Int, max: Int, step: Int = 1): Int = {
     if (step == 0) throw new IllegalArgumentException("Step must not be 0")
@@ -43,14 +40,62 @@ case class GameState(turn: Int,
     case None => this
   }
 
-  def advancePhase() = {
-    val newPhaseStart = phaseStart map {_ => LocalDateTime.now() }
-    val newPauseStart = pauseStart map {_ => LocalDateTime.now() }
-    if (this.phaseIndex >= Phase.phases.length)
-      GameState(turn + 1, 1, terrorLevel, countryPRs, newPhaseStart, newPauseStart)
-    else
-      GameState(turn, phaseIndex + 1, terrorLevel, countryPRs, newPhaseStart, newPauseStart)
+  def setPhase(newTurn: Int, newPhaseIndex: Int): GameState = {
+    val newPhase = Phase.phases(newPhaseIndex - 1)
+
+    // We only want to update these if they are set, so map over the option
+    val newPhaseEnd = phaseEnd map { _ => LocalDateTime.now plus newPhase.duration }
+    val newPauseStart = pauseStart map { _ => LocalDateTime.now }
+
+    GameState(newTurn, newPhaseIndex, terrorLevel, countryPRs, newPhaseEnd, newPauseStart)
   }
+
+  def advancePhase() = {
+    val (newTurn, newPhaseIndex) =
+      if (this.phaseIndex >= Phase.phases.length)
+        (turn + 1, 1)
+      else
+        (turn, phaseIndex + 1)
+
+    setPhase(newTurn, newPhaseIndex)
+  }
+
+  def regressPhase() = {
+    val (newTurn, newPhaseIndex) =
+      if (this.phaseIndex <= 1)
+        (turn - 1, Phase.phases.length)
+      else
+        (turn, phaseIndex - 1)
+
+    setPhase(newTurn, newPhaseIndex)
+  }
+
+  def started() = (phaseEnd, pauseStart) match {
+    case (Some(oldPhaseEnd), Some(oldPauseStart)) =>
+      // Paused
+      val pauseLength = Duration.between(oldPauseStart, LocalDateTime.now)
+      GameState(turn, phaseIndex, terrorLevel, countryPRs, Some(oldPhaseEnd plus pauseLength), None)
+
+    case (None, _) =>
+      // Stopped
+      GameState(turn, phaseIndex, terrorLevel, countryPRs, Some(LocalDateTime.now plus phase.duration), None)
+
+    case _ =>
+      // Already Started
+      this
+  }
+
+  def paused() = (phaseEnd, pauseStart) match {
+    case (Some(_), None) =>
+      // Started
+      GameState(turn, phaseIndex, terrorLevel, countryPRs, phaseEnd, Some(LocalDateTime.now))
+
+    case _ =>
+      // Already Stopped or Paused
+      this
+  }
+
+  def stopped() = GameState(turn, phaseIndex, terrorLevel, countryPRs, None, None)
 }
 
 object GameState {

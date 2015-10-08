@@ -19,6 +19,11 @@ GET     /status/edit                controllers.Status.editGameState
 
 POST    /status/terror              controllers.Status.updateTerror
 POST    /status/pr                  controllers.Status.updatePr
+
+POST    /status/advance-phase       controllers.Status.advancePhase
+POST    /status/regress-phase       controllers.Status.regressPhase
+POST    /status/start               controllers.Status.start
+POST    /status/pause               controllers.Status.pause
 POST    /status/reset               controllers.Status.reset
 
 # Map static resources from the /public folder to the /assets URL path

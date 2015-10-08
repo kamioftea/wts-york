@@ -11,13 +11,13 @@
     <div class="small-12 medium-6 large-3 columns">
         <div class="row">
             <div class="small-12 columns">
-                <h2 class="text-center">Watch the Skies</h2>
+                @status.worldTerror(gameState.terrorStep(-90, 90, 25))
 
                 <div class="panel">
-                    <h1 class="text-center">Turn @gameState.turn</h1>
-                    <h1 class="text-center"><small>@gameState.phase.name</small></h1>
+                    <h1 class="text-center turn">Turn @gameState.turn</h1>
+                    <h1 class="text-center"><small class="phase-name">@gameState.phase.name</small></h1>
 
-                    <dl>
+                    <dl class="phase-activities">
                         @for(activity <- gameState.phase.activities) {
                             <dt>@activity.group</dt>
                             <dd>@activity.description</dd>
@@ -26,7 +26,7 @@
                 </div>
             </div>
         </div>
-        @status.worldTerror(gameState.terrorStep(-90, 90, 25))
+
     </div>
     <div class="small-12 medium-6 large-3 large-push-6 columns">
         <h2 class="text-center">Latest News</h2>

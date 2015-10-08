@@ -45,10 +45,23 @@ class Status @Inject()(system: ActorSystem) extends Controller with AuthElement 
     }
   }
 
-  def buildGameStateJson(state: GameState) = Json.obj(
-    "terrorLevel" -> state.terrorStep(-90, 90, 25),
-    "countryPRs" -> state.countryPRs.mapValues(_.pr)
-  )
+  def buildGameStateJson(state: GameState) = {
+    val activities = state.phase.activities map {
+      a => a.group -> JsString(a.description)
+    }
+
+    val phase = Json.obj(
+      "name" -> state.phase.name,
+      "activities" -> JsObject(activities)
+    )
+
+    Json.obj(
+      "turn" -> state.turn,
+      "phase" -> phase,
+      "terrorLevel" -> state.terrorStep(-90, 90, 25),
+      "countryPRs" -> state.countryPRs.mapValues(_.pr)
+    )
+  }
 
   def gameState = AsyncStack(AuthorityKey -> Admin) { _ =>
     getGameState map { gameState =>
@@ -62,7 +75,7 @@ class Status @Inject()(system: ActorSystem) extends Controller with AuthElement 
     getGameState map { gameState =>
         Ok(views.html.editGameState(
           gameState,
-          terrorForm.fill(TerrorUpdate(gameState.terrorRank)),
+          terrorForm.fill(TerrorUpdate(gameState.terrorLevel)),
           prForm
         ))
     }
@@ -116,6 +129,26 @@ class Status @Inject()(system: ActorSystem) extends Controller with AuthElement 
       prUpdate => gameActor ! prUpdate
     )
 
+    Redirect(routes.Status.editGameState())
+  }
+
+  def advancePhase() = StackAction(AuthorityKey -> Admin) { request =>
+    gameActor ! AdvancePhase()
+    Redirect(routes.Status.editGameState())
+  }
+
+  def regressPhase() = StackAction(AuthorityKey -> Admin) { request =>
+    gameActor ! RegressPhase()
+    Redirect(routes.Status.editGameState())
+  }
+
+  def start() = StackAction(AuthorityKey -> Admin) { request =>
+    gameActor ! Start()
+    Redirect(routes.Status.editGameState())
+  }
+
+  def pause() = StackAction(AuthorityKey -> Admin) { request =>
+    gameActor ! Pause()
     Redirect(routes.Status.editGameState())
   }
 
