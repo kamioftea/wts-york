@@ -124,7 +124,6 @@ trait AuthConfig extends BaseAuthConfig {
   override lazy val tokenAccessor = new CookieTokenAccessor(
     /*
      * Whether use the secure option or not use it in the cookie.
-     * Following code is default.
      */
     // The data available by logging on is not worth protecting with an SSL certificate
     cookieSecureOption = false,

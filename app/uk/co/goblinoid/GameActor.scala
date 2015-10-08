@@ -10,26 +10,42 @@ import java.nio.file.{Files, Path}
 import java.time.format.DateTimeFormatter
 import java.time.LocalDateTime
 
+import _root_.play.Logger
 import akka.actor._
 import _root_.play.api.libs.json._
+import scala.concurrent.duration._
+import scala.language.postfixOps
 
 import scala.collection.immutable.SortedMap
-import scala.util.Try
+import scala.util.{Failure, Success, Try}
 
 
 object GameActor {
-  def props(file: Path) = Props(new GameActor(file: Path))
+  def props(stateFile: Path) = Props(new GameActor(stateFile))
 
-  case class GetGameState()
+  sealed trait GameActorMessage
 
-  case class TerrorUpdate(terror: Int)
+  case class GetGameState() extends GameActorMessage
 
-  case class PrUpdate(country: String, pr: Int)
+  case class TerrorUpdate(terror: Int) extends GameActorMessage
 
-  case class Reset()
+  case class PrUpdate(country: String, pr: Int) extends GameActorMessage
+
+  case class AdvancePhase() extends GameActorMessage
+
+  case class RegressPhase() extends GameActorMessage
+
+  case class Tick() extends GameActorMessage
+
+  case class Start() extends GameActorMessage
+
+  case class Pause() extends GameActorMessage
+
+  case class Reset() extends GameActorMessage
+
 }
 
-class GameActor(file: Path) extends Actor {
+class GameActor(stateFile: Path) extends Actor {
 
   import GameActor._
   import context._
@@ -38,60 +54,121 @@ class GameActor(file: Path) extends Actor {
 
   val defaultState = GameState(
     turn = 1,
-    phase = 1,
-    terrorRank = 23,
+    phaseIndex = 0,
+    terrorLevel = 23,
     countryPRs = SortedMap(
-      "Brazil" -> CountryPR(4, SortedMap(1 -> 2, 2 -> 4, 3 -> 6, 4 -> 8, 5 -> 10, 6 -> 12, 7 -> 14, 8 -> 16)),
-      "China" -> CountryPR(5, SortedMap(1 -> 2, 2 -> 5, 3 -> 8, 4 -> 11, 5 -> 14, 6 -> 17, 7 -> 20, 8 -> 23)),
-      "France" -> CountryPR(6, SortedMap(1 -> 2, 2 -> 4, 3 -> 6, 4 -> 8, 5 -> 10, 6 -> 12, 7 -> 14, 8 -> 16)),
-      "India" -> CountryPR(4, SortedMap(1 -> 2, 2 -> 4, 3 -> 6, 4 -> 8, 5 -> 10, 6 -> 12, 7 -> 14, 8 -> 16)),
-      "Japan" -> CountryPR(7, SortedMap(1 -> 2, 2 -> 5, 3 -> 8, 4 -> 11, 5 -> 14, 6 -> 17, 7 -> 20, 8 -> 23)),
-      "Russia" -> CountryPR(2, SortedMap(1 -> 2, 2 -> 4, 3 -> 6, 4 -> 8, 5 -> 10, 6 -> 12, 7 -> 14, 8 -> 16)),
-      "UK" -> CountryPR(5, SortedMap(1 -> 2, 2 -> 5, 3 -> 8, 4 -> 11, 5 -> 14, 6 -> 17, 7 -> 20, 8 -> 23)),
-      "USA" -> CountryPR(6, SortedMap(1 -> 2, 2 -> 5, 3 -> 8, 4 -> 11, 5 -> 14, 6 -> 17, 7 -> 20, 8 -> 23))
+      "Brazil" -> CountryPR(6, SortedMap(1 -> 3, 2 -> 5, 3 -> 7, 4 -> 9, 5 -> 12, 6 -> 14, 7 -> 16, 8 -> 18, 9 -> 20)),
+      "China" -> CountryPR(6, SortedMap(1 -> 5, 2 -> 7, 3 -> 9, 4 -> 12, 5 -> 15, 6 -> 18, 7 -> 21, 8 -> 23, 9 -> 26)),
+      "France" -> CountryPR(6, SortedMap(1 -> 4, 2 -> 6, 3 -> 8, 4 -> 10, 5 -> 13, 6 -> 15, 7 -> 17, 8 -> 19, 9 -> 21)),
+      "India" -> CountryPR(6, SortedMap(1 -> 3, 2 -> 5, 3 -> 7, 4 -> 9, 5 -> 11, 6 -> 14, 7 -> 16, 8 -> 18, 9 -> 20)),
+      "Japan" -> CountryPR(6, SortedMap(1 -> 4, 2 -> 6, 3 -> 8, 4 -> 10, 5 -> 13, 6 -> 16, 7 -> 18, 8 -> 21, 9 -> 23)),
+      "Russia" -> CountryPR(6, SortedMap(1 -> 3, 2 -> 5, 3 -> 7, 4 -> 9, 5 -> 11, 6 -> 13, 7 -> 15, 8 -> 17, 9 -> 18)),
+      "UK" -> CountryPR(6, SortedMap(1 -> 4, 2 -> 6, 3 -> 8, 4 -> 10, 5 -> 13, 6 -> 15, 7 -> 17, 8 -> 19, 9 -> 21)),
+      "US" -> CountryPR(6, SortedMap(1 -> 5, 2 -> 8, 3 -> 11, 4 -> 14, 5 -> 16, 6 -> 19, 7 -> 22, 8 -> 25, 9 -> 28))
     )
   )
 
-  def stateFromFile: Option[GameState] = {
-    Try {
-      val json = Files.readAllBytes(file)
-      Json.parse(json).validate[GameState].get
-    }.toOption
+  def stateFromFile: Option[GameState] = Try {
+    val json = Files.readAllBytes(stateFile)
+    Json.parse(json).validate[GameState].get
+  } match {
+    case Success(gameState) => Some(gameState)
+    case Failure(error) =>
+      Logger.error("Failed to read file", error)
+      None
   }
 
   def stateToFile(state: GameState): Unit = {
-    Files.write(file, Json.stringify(Json.toJson(state)).getBytes(StandardCharsets.UTF_8))
-  }
-
-  def backupState(state: GameState): Unit = {
-    val (base, ext) = file.getFileName.toString.span(_.toString != ".")
-    val backupFile = file.resolveSibling(base + LocalDateTime.now.format(DateTimeFormatter.ofPattern("-yyyy-MM-dd-HH-mm-ss")) + ext)
-
-    if (Files.notExists(backupFile))
-      Files.copy(file, backupFile)
+    Files.write(stateFile, Json.stringify(Json.toJson(state.paused())).getBytes(StandardCharsets.UTF_8))
   }
 
   val state = stateFromFile.getOrElse(defaultState)
 
-  def buildReceive(state: GameState): Receive = {
+  def backupState(state: GameState): Unit = {
+    val (base, ext) = stateFile.getFileName.toString.span(_.toString != ".")
+    val backupFile = stateFile.resolveSibling(base + LocalDateTime.now.format(DateTimeFormatter.ofPattern("-yyyy-MM-dd-HH-mm-ss")) + ext)
+
+    if (Files.notExists(stateFile))
+      stateToFile(state)
+
+    if (Files.notExists(backupFile))
+      Files.copy(stateFile, backupFile)
+  }
+
+  val ticker: Option[Cancellable] = None
+
+  def buildReceive(state: GameState, ticker: Option[Cancellable]): Receive = {
     case GetGameState() =>
       sender() ! state
 
     case TerrorUpdate(newTerror) =>
       val newState: GameState = state.withTerror(newTerror)
       stateToFile(newState)
-      become(buildReceive(newState))
+      
+      become(buildReceive(newState, ticker))
 
     case PrUpdate(country, newPr) =>
       val newState: GameState = state.withCountryPr(country, newPr)
       stateToFile(newState)
-      become(buildReceive(newState))
+      
+      become(buildReceive(newState, ticker))
+
+    case AdvancePhase() =>
+      backupState(state)
+      val newState = state.advancePhase()
+      stateToFile(newState)
+      
+      become(buildReceive(newState, ticker))
+
+    case RegressPhase() =>
+      backupState(state)
+      val newState = state.regressPhase()
+      stateToFile(newState)
+      
+      become(buildReceive(newState, ticker))
+
+    case Tick() => (state.phaseEnd, state.pauseStart) match {
+      case (Some(phaseEnd), None) if LocalDateTime.now isAfter phaseEnd =>
+        backupState(state)
+        become(buildReceive(state.advancePhase(), ticker))
+        
+      case _ =>
+        become(buildReceive(state, ticker))
+    }
+
+    case Start() =>
+      val newTicker = ticker match {
+        case Some(existing) if !existing.isCancelled => ticker
+        case _ =>
+          Some(
+            system.scheduler.schedule(1 second, 1 second, self, Tick())
+          )
+      }
+      
+      backupState(state)
+      val newState = state.started()
+      stateToFile(newState)
+      
+      become(buildReceive(newState, newTicker))
+
+    case Pause() =>
+      ticker.foreach(_.cancel())
+
+      backupState(state)
+      val newState = state.paused()
+      stateToFile(newState)
+
+      become(buildReceive(newState, None))
 
     case Reset() =>
+      ticker.foreach(_.cancel())
+      
       backupState(state)
-      stateToFile(defaultState)
-      become(buildReceive(defaultState))
+      val newState = defaultState.stopped()
+      stateToFile(newState)
+      
+      become(buildReceive(newState, None))
   }
 
-  def receive = buildReceive(state)
+  def receive = buildReceive(state, None)
 }

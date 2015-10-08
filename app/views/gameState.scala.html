@@ -4,53 +4,47 @@
 @import java.time.format.{DateTimeFormatter}
 @import java.time.ZoneId
 
-
 @(gameState: GameState, tweets: Seq[Tweet])
 
 @main(scripts = Seq(routes.Assets.versioned("javascripts/status.min.js"))) {
 <div class="row full-width">
-	<div class="small-12 large-3 large-push-9 columns">
-		@status.worldTerror(gameState.terrorRank)
-		<h1>Latest News</h1>
+    <div class="small-12 medium-6 large-3 columns">
+        <div class="row">
+            <div class="small-12 columns">
+                @status.worldTerror(gameState.terrorStep(-90, 90, 25))
 
-		@for(tweet <- tweets) {
-			<div class="panel" data-tweet-id="@tweet.id">
-				<p>@tweet.text</p>
-				<p class="text-right">@tweet.posted.format(DateTimeFormatter.ofPattern("H:mm:ss").withZone(ZoneId.systemDefault()))</p>
-			</div>
-		}
-	</div>
-	<div class="small-12 large-9 large-pull-3 columns">
-		<div class="panel">
-			<div class="row">
-				<div class="small-12 large-6 columns text-center">
-					<h1>Turn: @gameState.turn</h1>
-				</div>
-				<div class="small-12 large-6 columns text-center">
-					<h1>Phase: @gameState.phase</h1>
-				</div>
-			</div>
-		</div>
-		<div class="row">
-			@for((country_name, countryPR) <- gameState.countryPRs) {
-				<div class="small-6 large-3 columns">
-					<div class="panel">
-						<h1 class="text-center"><small>@country_name</small></h1>
-						<h1 class="text-center">@countryPR.pr</h1>
-						<h2 class="text-center">
-							@for((pr, income) <- countryPR.incomeLevels) {
-								@if(pr == countryPR.pr) {
-									<strong>@income</strong>
-								} else {
-									<small>@income</small>
-								}
-							}
-						</h2>
+                <div class="panel">
+                    <h1 class="text-center turn">Turn @gameState.turn</h1>
+                    <h1 class="text-center"><small class="phase-name">@gameState.phase.name</small></h1>
 
-					</div>
-				</div>
-			}
-		</div>
-	</div>
+                    <dl class="phase-activities">
+                        @for(activity <- gameState.phase.activities) {
+                            <dt>@activity.group</dt>
+                            <dd>@activity.description</dd>
+                        }
+                    </dl>
+                </div>
+            </div>
+        </div>
+
+    </div>
+    <div class="small-12 medium-6 large-3 large-push-6 columns">
+        <h2 class="text-center">Latest News</h2>
+
+        @for(tweet <- tweets) {
+            <div class="panel" data-tweet-id="@tweet.id">
+                <p>@tweet.text</p>
+                <p class="text-right">@tweet.posted.format(DateTimeFormatter.ofPattern("H:mm:ss").withZone(ZoneId.systemDefault()))</p>
+            </div>
+        }
+    </div>
+    <div class="small-12 large-6 large-pull-3 columns">
+        <h2 class="text-center">Income</h2>
+        <div class="row">
+            @for((countryName, countryPR) <- gameState.countryPRs) {
+                @status.prLevel(countryName, countryPR)
+            }
+        </div>
+    </div>
 </div>
 }
