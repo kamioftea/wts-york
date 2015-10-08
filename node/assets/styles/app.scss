@@ -71,7 +71,7 @@ body {
   background-color: $crumb-bg;
 }
 
-.dial-container{
+.dial-container {
     position: relative;
 
     .dial {
@@ -85,7 +85,9 @@ body {
         left: 50%;
         width: 12px;
         background-color: black;
+        transform: rotate(-90deg);
         transform-origin: center 103%;
+        transition: transform 0.5s ease-in-out;
     }
 }
 
@@ -102,7 +104,6 @@ body.with-stars {
         @media #{$large-up} {
             padding: 6rem 0;
         }
-
 
         h1 {
             color: $ghost;
@@ -123,4 +124,22 @@ body.with-stars {
     display: inline-block;
     width: 1.8em;
     text-align: center;
+}
+
+h3.pr-country-name {
+    line-height: $h3-font-size * 1.5;
+    margin: 0;
+}
+
+.pr-list .pr-item {
+    line-height: $h3-font-size * 1.75;
+    font-size: $h5-font-size;
+    text-align: center;
+    padding-bottom: 0;
+
+    &.current{
+        line-height: $h1-font-size;
+        font-size: $h1-font-size;
+        font-weight: bold;
+    }
 }

@@ -1,7 +1,7 @@
 package controllers
 
 import java.nio.file.Paths
-import javax.inject.{Singleton, _}
+import javax.inject._
 
 import akka.actor._
 import akka.pattern.ask
@@ -11,6 +11,7 @@ import play.api.Play.current
 import play.api.data.Forms._
 import play.api.data._
 import play.api.i18n.Messages.Implicits._
+import play.api.libs.json._
 import play.api.libs.oauth.OAuthCalculator
 import play.api.libs.ws.WS
 import play.api.mvc._
@@ -44,12 +45,37 @@ class Status @Inject()(system: ActorSystem) extends Controller with AuthElement 
     }
   }
 
+  def buildGameStateJson(state: GameState) = {
+    val activities = state.phase.activities map {
+      a => a.group -> JsString(a.description)
+    }
+
+    val phase = Json.obj(
+      "name" -> state.phase.name,
+      "activities" -> JsObject(activities)
+    )
+
+    Json.obj(
+      "turn" -> state.turn,
+      "phase" -> phase,
+      "terrorLevel" -> state.terrorStep(-90, 90, 25),
+      "countryPRs" -> state.countryPRs.mapValues(_.pr)
+    )
+  }
+
+  def gameState = AsyncStack(AuthorityKey -> Admin) { _ =>
+    getGameState map { gameState =>
+      val json = buildGameStateJson(gameState)
+
+      Ok(json)
+    }
+  }
+
   def editGameState = AsyncStack(AuthorityKey -> Admin) { _ =>
-    getGameState.map {
-      case gameState =>
+    getGameState map { gameState =>
         Ok(views.html.editGameState(
           gameState,
-          terrorForm.fill(TerrorUpdate(gameState.terrorRank)),
+          terrorForm.fill(TerrorUpdate(gameState.terrorLevel)),
           prForm
         ))
     }
@@ -81,14 +107,6 @@ class Status @Inject()(system: ActorSystem) extends Controller with AuthElement 
     )
   }
 
-  def terror() = AsyncStack(AuthorityKey -> Admin) { _ =>
-    for {
-      gameState <- getGameState
-    } yield {
-      Ok(views.html.status.worldTerror(gameState.terrorRank))
-    }
-  }
-
   def updateTerror() = StackAction(AuthorityKey -> Admin) { request =>
     terrorForm.bindFromRequest()(request).value.foreach(
       terrorUpdate => gameActor ! terrorUpdate
@@ -111,6 +129,26 @@ class Status @Inject()(system: ActorSystem) extends Controller with AuthElement 
       prUpdate => gameActor ! prUpdate
     )
 
+    Redirect(routes.Status.editGameState())
+  }
+
+  def advancePhase() = StackAction(AuthorityKey -> Admin) { request =>
+    gameActor ! AdvancePhase()
+    Redirect(routes.Status.editGameState())
+  }
+
+  def regressPhase() = StackAction(AuthorityKey -> Admin) { request =>
+    gameActor ! RegressPhase()
+    Redirect(routes.Status.editGameState())
+  }
+
+  def start() = StackAction(AuthorityKey -> Admin) { request =>
+    gameActor ! Start()
+    Redirect(routes.Status.editGameState())
+  }
+
+  def pause() = StackAction(AuthorityKey -> Admin) { request =>
+    gameActor ! Pause()
     Redirect(routes.Status.editGameState())
   }
 
