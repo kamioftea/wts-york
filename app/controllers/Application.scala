@@ -27,18 +27,31 @@ class Application @Inject()(system: ActorSystem, mailerClient: MailerClient) ext
   implicit val timeout = Timeout(5 second)
   val emailActor = system.actorOf(EmailActor.props(mailerClient), "email-actor")
 
+  val roles = Seq(
+    "Head Of State",
+    "UN Ambassador",
+    "Diplomat",
+    "General",
+    "Scientist",
+    "Alien"
+  )
+
   val emailForm: Form[SendRegistrationEmail] = {
+    val rowsAsData = (roles.indices map {role => s"roles[$role]"}) zip roles toMap
+
     Form(
       mapping(
         "name" -> optional(text),
-        "email" -> email
+        "email" -> email,
+        "isFresher" -> boolean,
+        "roles" -> seq(text)
       )(SendRegistrationEmail.apply)(SendRegistrationEmail.unapply)
-    )
+    ).bind(rowsAsData).discardingErrors
   }
 
   def index = Action {
     implicit request =>
-      Ok(views.html.index(emailForm))
+      Ok(views.html.index(emailForm, roles))
   }
 
   def sendEmail = Action.async(
@@ -49,7 +62,7 @@ class Application @Inject()(system: ActorSystem, mailerClient: MailerClient) ext
         // If there was a validation error - just display the index page with errors
         formWithErrors => {
           Future.successful(
-            BadRequest(views.html.index(formWithErrors))
+            BadRequest(views.html.index(formWithErrors, roles))
           )
         },
         // If it bound successfully we have a SendRegistrationEmail message to send to the email actor
