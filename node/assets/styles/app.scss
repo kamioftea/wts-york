@@ -143,3 +143,20 @@ h3.pr-country-name {
         font-weight: bold;
     }
 }
+
+.role-list {
+
+    label {
+        font-size: 0.75rem;
+    }
+
+    &[class*="block-grid-"] > li {
+        padding-bottom: 0;
+    }
+}
+
+.form-input-intro {
+    @extend label;
+
+    cursor: default;
+}
