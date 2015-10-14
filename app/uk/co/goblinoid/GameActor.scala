@@ -68,15 +68,19 @@ class GameActor(stateFile: Path) extends Actor {
     )
   )
 
-  def stateFromFile: Option[GameState] = Try {
-    val json = Files.readAllBytes(stateFile)
-    Json.parse(json).validate[GameState].get
-  } match {
-    case Success(gameState) => Some(gameState)
-    case Failure(error) =>
-      Logger.error("Failed to read file", error)
+  def stateFromFile: Option[GameState] =
+    if (Files.notExists(stateFile))
       None
-  }
+    else
+      Try {
+        val json = Files.readAllBytes(stateFile)
+        Json.parse(json).validate[GameState].get
+      } match {
+        case Success(gameState) => Some(gameState)
+        case Failure(error) =>
+          Logger.error("Failed to read file", error)
+          None
+      }
 
   def stateToFile(state: GameState): Unit = {
     Files.write(stateFile, Json.stringify(Json.toJson(state.paused())).getBytes(StandardCharsets.UTF_8))

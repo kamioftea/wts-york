@@ -8,24 +8,21 @@ import akka.util.Timeout
 
 import play.api.data.Forms._
 import play.api.data._
-import play.api.libs.mailer.MailerClient
 import play.api.mvc._
 import uk.co.goblinoid.EmailActor._
-import uk.co.goblinoid.EmailActor
 
 import play.api.Play.current
 import play.api.i18n.Messages.Implicits._
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration._
 import scala.language.postfixOps
-import scala.concurrent.ExecutionContext.Implicits.global
 
 @Singleton
-class Application @Inject()(system: ActorSystem, mailerClient: MailerClient) extends Controller {
+class Application @Inject()(@Named("email-actor") emailActor: ActorRef)
+                           (implicit ec: ExecutionContext) extends Controller {
 
-  implicit val timeout = Timeout(5 second)
-  val emailActor = system.actorOf(EmailActor.props(mailerClient), "email-actor")
+  implicit val timeout = Timeout(30 second)
 
   val roles = Seq(
     "Head Of State",

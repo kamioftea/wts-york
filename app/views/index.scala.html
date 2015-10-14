@@ -1,5 +1,6 @@
 @import helper._
 @import uk.co.goblinoid.EmailActor.SendRegistrationEmail
+@import scala.language.postfixOps
 
 @(emailForm: Form[SendRegistrationEmail], roles: Seq[String])(implicit flash: Flash, messages: Messages)
 

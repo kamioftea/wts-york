@@ -7,8 +7,9 @@ import akka.actor._
 import scala.language.{reflectiveCalls, postfixOps}
 import scala.util.{Failure, Success, Try}
 
+import javax.inject._
+
 object EmailActor {
-  def props(mailerClient: MailerClient) = Props(new EmailActor(mailerClient))
 
   case class SendRegistrationEmail(name: Option[String], email: String, isFresher: Boolean, roles: Seq[String])
 
@@ -24,7 +25,7 @@ object EmailActor {
  *
  * Created by Jeff on 01/10/2015.
  */
-class EmailActor(mailerClient: MailerClient) extends Actor {
+class EmailActor @Inject()(mailerClient: MailerClient) extends Actor {
 
   import EmailActor._
 
