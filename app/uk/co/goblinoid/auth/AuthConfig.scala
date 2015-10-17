@@ -3,6 +3,7 @@ package uk.co.goblinoid.auth
 
 import controllers.routes
 import jp.t2v.lab.play2.auth.{AuthConfig => BaseAuthConfig, CookieTokenAccessor}
+import play.api.Logger
 import play.api.mvc.{Results, Result, RequestHeader}
 
 import scala.reflect._
@@ -88,12 +89,21 @@ trait AuthConfig extends BaseAuthConfig {
    */
   def authenticationFailed(request: RequestHeader)(implicit ctx: ExecutionContext): Future[Result] = {
     val access_uri =
-      if (request.uri == routes.User.login().url) request.session.get("request_uri").getOrElse(routes.Application.index().url)
-      else request.uri
-    
+      if (request.uri == routes.User.login().url
+        || request.headers.get("X-Requested-With").contains("XMLHttpRequest")
+        || request.method != "GET")
+        // Redirected to login page, or is an XMLHttpRequest - keep previous, falling back to index.
+        None
+      else
+        Some(request.uri)
+
+    val response = Results.Redirect(routes.User.login())
+
     Future.successful(
-      Results.Redirect(routes.User.login())
-        .withSession("access_uri" -> access_uri)
+      access_uri match {
+        case Some(uri) => response.withSession("access_uri" -> uri)
+        case None => response
+      }
     )
   }
 
