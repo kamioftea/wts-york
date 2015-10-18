@@ -1,4 +1,4 @@
-package uk.co.goblinoid.play
+package uk.co.goblinoid.playutils
 
 import javax.inject._
 

@@ -1,6 +1,7 @@
 package controllers
 
 import jp.t2v.lab.play2.auth.LoginLogout
+import play.api.Logger
 import play.api.data.Form
 import play.api.mvc.{Action, Controller}
 import uk.co.goblinoid.auth.{Account, Guest, AuthConfig}

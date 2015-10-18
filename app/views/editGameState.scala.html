@@ -5,90 +5,126 @@
 
 @(gameState: GameState, terrorForm: Form[TerrorUpdate], prForm: Form[PrUpdate])(implicit messages: Messages)
 
-@main() {
-<div class="row full-width">
-    <div class="small-12 large-3 large-push-9 columns">
-        <h1>World Terror Rank</h1>
-        <div class="panel callout">
-            @form(action = routes.Status.updateTerror()) {
-                @inputText(terrorForm("terror"))
-                <button class="button primary" type="submit">Submit</button>
-            }
-        </div>
-    </div>
-    <div class="small-12 large-9 large-pull-3 columns">
-        <div class="panel">
-            <div class="row">
-                <div class="small-12 large-3 columns text-center">
-                    <h1>Turn: @gameState.turn</h1>
+    @main(scripts = Seq(routes.Assets.versioned("javascripts/status.min.js"))) {
+        <div class="row full-width">
+            <div class="small-12 large-3 columns">
+                <div class="row">
+                    <div class="small-12 medium-6 large-12 columns">
+                        <div class="panel callout">
+                        @form(action = routes.Status.updateTerror()) {
+                            <div class="row">
+                                <div class="small-2 columns">
+                                    <label for="terror-input" class="inline right @if(terrorForm("terror").hasErrors) { error }">
+                                        Terror:
+                                    </label>
+                                </div>
+                                <div class="small-10 columns">
+                                    <div class="row collapse">
+                                        <div class="small-10 columns">
+                                            <input type="text" name="terror" id="terror-input"
+                                                   value="@terrorForm("terror").value"
+                                                   @if(terrorForm("terror").hasErrors) { class="error" }>
+                                            @for( error <- terrorForm("terror").errors) {
+                                                <small class="error">@Messages(error.message)</small>
+                                            }
+                                        </div>
+                                        <div class="small-2 columns">
+                                            <button class="button primary postfix" type="submit">
+                                                <span class="fa fa-arrow-right"></span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+                        }
+
+                        </div>
+                    </div>
+                    <div class="small-12 medium-6 large-12 columns">
+                        <div class="panel">
+                            <h1 class="text-center turn">Turn @gameState.turn</h1>
+                            <div class="row">
+                                <div class="small-2 columns">
+                                @form(action = routes.Status.regressPhase()) {
+                                    <button class="button secondary" type="submit">
+                                        <span class="fa fa-chevron-left"></span>
+                                    </button>
+                                }
+                                </div>
+                                <div class="small-8 columns">
+                                    <h1 class="text-center"><small class="phase-name">@gameState.phase.name</small></h1>
+                                </div>
+                                <div class="small-2 columns text-right">
+                                @form(action = routes.Status.advancePhase()) {
+                                    <button class="button secondary" type="submit">
+                                        <span class="fa fa-chevron-right"></span>
+                                    </button>
+                                }
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="small-6 columns">
+                                @form(action = if(gameState.isStarted) routes.Status.pause() else routes.Status.start()) {
+                                    <button class="button expand @{
+                                        if(gameState.isStarted) "warning" else "success"
+                                    } play-pause-button"
+                                    type="submit"
+                                    data-start-action="@routes.Status.start()"
+                                    data-pause-action="@routes.Status.pause()">
+                                    @{
+                                        if(gameState.isStarted) "Pause" else "Start"
+                                    }
+                                    </button>
+                                }
+                                </div>
+                                <div class="small-6 columns">
+                                @form(action = routes.Status.reset()) {
+                                    <button class="button expand alert reset-button @{
+                                        if(gameState.isStarted) "disabled"
+                                    }" type="submit">
+                                        Reset
+                                    </button>
+                                }
+                                </div>
+                            </div>
+                        </div></div>
                 </div>
-                <div class="small-12 large-5 columns text-center">
-                    <h1>
-                        Phase: @{gameState.phaseIndex}<br>
-                        <small>@gameState.phase.name</small>
-                        <small>@gameState.phaseEnd</small>
-                        <small>@gameState.pauseStart</small>
-                    </h1>
-                </div>
-                <div class="small-12 large-4 columns text-right">
-                    <ul class="button-group">
-                        <li>
-                            @form(action = routes.Status.regressPhase()) {
-                            <button class="button primary" type="submit">Previous</button>
-                            }
-                        </li>
-                        <li>
-                            @form(action = routes.Status.advancePhase()) {
-                                <button class="button primary" type="submit">Next</button>
-                            }
-                        </li>
-                    </ul>
-                    <ul class="button-group">
-                        <li>
-                            @form(action = routes.Status.start()) {
-                                <button class="button primary" type="submit">Start</button>
-                            }
-                        </li>
-                        <li>
-                            @form(action = routes.Status.pause()) {
-                                <button class="button primary" type="submit">Pause</button>
-                            }
-                        </li>
-                        <li>
-                            @form(action = routes.Status.reset()) {
-                                <button class="button alert" type="submit">Reset</button>
-                            }
-                        </li>
-                    </ul>
+            </div>
+            <div class="small-12 large-9 columns">
+                <div class="row">
+                @for( (countryName, countryPR) <- gameState.countryPRs) {
+                    <div class="small-12 columns">
+                        <div class="panel">
+                            <div class="row">
+                                <div class="small-12 medium-2 columns">
+                                    <h3 class="text-center"><small>@countryName</small></h3>
+                                </div>
+                                <div class="small-12 medium-10 columns">
+                                @defining(prForm.fill(PrUpdate(countryName, countryPR.pr))) { filledForm =>
+                                    <ul class="small-block-grid-3 medium-block-grid-9 pr-input-list">
+                                        @for(
+                                            (prRank, prIncome) <- countryPR.incomeLevels;
+                                            isCurrent <- Some(prRank == countryPR.pr)
+                                        ) {
+                                            <li class="pr-item">
+                                            @form(action = routes.Status.updatePr()) {
+                                                <input type="hidden" name="country" value="@filledForm("country").value">
+                                                <input type="hidden" name="pr" value="@prRank">
+                                                <button class="button expand @{
+                                                    if(isCurrent) "primary disabled" else "secondary"
+                                                }" type="submit">@prIncome</button>
+                                            }
+                                            </li>
+                                        }
+                                    </ul>
+                                }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
                 </div>
             </div>
         </div>
-        <div class="row">
-            @for((countryName, countryPR) <- gameState.countryPRs) {
-                <div class="small-6 large-3 columns">
-                    <div class="panel">
-                        <h1 class="text-center"><small>@countryName</small></h1>
-                        @defining(prForm.fill(PrUpdate(countryName, countryPR.pr))) { filledForm =>
-                            @form(action = routes.Status.updatePr()) {
-                                <input type="hidden" name="country" value="@filledForm("country").value">
-                                @inputText(filledForm("pr"))
-                                <button class="button primary" type="submit">Submit</button>
-                            }
-                        }
-                        <h2 class="text-center">
-                            @for((pr, income) <- countryPR.incomeLevels) {
-                                @if(pr == countryPR.pr) {
-                                    <strong>@income</strong>
-                                } else {
-                                    <small>@income</small>
-                                }
-                            }
-                        </h2>
-
-                    </div>
-                </div>
-            }
-        </div>
-    </div>
-</div>
-}
+    }

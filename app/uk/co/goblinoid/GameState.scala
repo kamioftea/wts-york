@@ -33,10 +33,10 @@ case class GameState(turn: Int,
       (terrorLevel / step) * ((max - min) / step_factor) + min
   }
 
-  def withTerror(newTerror: Int) = GameState(turn, phaseIndex, newTerror, countryPRs)
+  def withTerror(newTerror: Int) = GameState(turn, phaseIndex, newTerror, countryPRs, phaseEnd, pauseStart)
 
   def withCountryPr(country: String, newPr: Int) = countryPRs.get(country) match {
-    case Some(currentPr) => GameState(turn, phaseIndex, terrorLevel, countryPRs.updated(country, currentPr.withPr(newPr)))
+    case Some(currentPr) => GameState(turn, phaseIndex, terrorLevel, countryPRs.updated(country, currentPr.withPr(newPr)), phaseEnd, pauseStart)
     case None => this
   }
 
@@ -96,6 +96,8 @@ case class GameState(turn: Int,
   }
 
   def stopped() = GameState(turn, phaseIndex, terrorLevel, countryPRs, None, None)
+
+  def isStarted = phaseEnd.isDefined && pauseStart.isEmpty
 }
 
 object GameState {
