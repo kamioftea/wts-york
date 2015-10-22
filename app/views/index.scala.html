@@ -11,7 +11,8 @@
             <h1 class="text-center">
                 <small>York Science Fiction and Fantasy Society Presents</small><br>
                 <span class="text-typewriter">Watch the Skies</span><br>
-                <small>Saturday Week 6, 7th November 2015</small>
+                <small>Saturday Week 6, 7th November 2015</small><br>
+                <small>D Bar, Derwent College, University of York</small>
             </h1>
         </div>
     </div>
@@ -44,15 +45,66 @@
                     invading aliens.
                 </p>
                 <p>
-                    The game will run from 9am on Saturday, Week 6 (7th November). There are sixty
-                    player slots available, contact us to book your place.
+                    The game will run from 9am on Saturday, Week 6 (7th November). It will cost
+                    £5, or £3 if you are a member of the Science Fiction and Fantasy Society.
+                    There are sixty player slots available, contact us to book your place.
                 </p>
 
+                <h3>
+                    <small>Roles:</small>
+                </h3>
+
+                <div class="row">
+                    <div class="small-12 medium-6 columns">
+                        <dl>
+                            <dt>Head of State</dt>
+                            <dd>Overall team leadership and strategy, liaises with the other nations.</dd>
+                        </dl>
+                    </div>
+                    <div class="small-12 medium-6 columns">
+                        <dl>
+                            <dt>Ambassador to the UN</dt>
+                            <dd>Attends UN meetings to respond to global crises.</dd>
+                        </dl>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="small-12 medium-6 columns">
+                        <dl>
+                            <dt>Diplomat</dt>
+                            <dd>Liaises with the other nations, controls secret agents.</dd>
+                        </dl>
+                    </div>
+                    <div class="small-12 medium-6 columns">
+                        <dl>
+                            <dt>General</dt>
+                            <dd>Commands the military forces on the world map.</dd>
+                        </dl>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="small-12 medium-6 columns">
+                        <dl>
+                            <dt>Scientist</dt>
+                            <dd>Research alien technology.</dd>
+                        </dl>
+                    </div>
+                    <div class="small-12 medium-6 columns">
+                        <dl>
+                            <dt>Alien</dt>
+                            <dd>Invade earth!</dd>
+                        </dl>
+                    </div>
+                </div>
             </div>
 
             <div class="small-12 medium-6 large-5 columns">
                 <h2 class="medium-only-text-right">Interested?</h2>
-                <p>Fill in the form or send us an email and we'll send you details of how to book.</p>
+                <p>
+                    Fill in the form or send us an email and we'll send you details of how to book.
+                </p>
                 <div class="panel">
                     @form(action = routes.Application.sendEmail()) {
                         <div class="row">
@@ -104,7 +156,9 @@
                                         </label>
                                     </div>
                                     <div class="small-10 columns">
-                                        <p class="form-input-intro inline">There are a variety of game roles available. Please un-check any that you would prefer not to play.</p>
+                                        <p class="form-input-intro inline">
+                                            Please un-check any roles that you would prefer not to play.
+                                        </p>
                                         <ul class="small-block-grid-1 large-block-grid-2 role-list">
                                             @defining(emailForm.data.collect { case (k, v) if k.matches("roles\\[\\d+\\]") => v } toSet) { selectedRoles =>
                                                 @for(role <- roles; roleId <- Some(role.replaceAll("[^a-zA-Z0-9]+", "-").toLowerCase)) {
@@ -134,6 +188,11 @@
                         </div>
                     }
                 </div>
+                <p>
+                    You can also catch one of the team in person at an SF&F event of your choice. At
+                    least some of us can be found at Thursday socials, Impact LARP, Changeling, and
+                    boardgames night.
+                </p>
             </div>
         </div>
     </div>
