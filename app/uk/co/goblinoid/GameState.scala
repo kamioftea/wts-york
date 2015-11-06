@@ -14,6 +14,7 @@ case class GameState(turn: Int,
                      countryPRs: SortedMap[String, CountryPR],
                      phaseEnd: Option[LocalDateTime] = None,
                      pauseStart: Option[LocalDateTime] = None) {
+
   // phaseIndex is 1 indexed due to game labelling
   lazy val phase =
     if(Phase.phases.isDefinedAt(phaseIndex - 1))
@@ -37,6 +38,11 @@ case class GameState(turn: Int,
 
   def withCountryPr(country: String, newPr: Int) = countryPRs.get(country) match {
     case Some(currentPr) => GameState(turn, phaseIndex, terrorLevel, countryPRs.updated(country, currentPr.withPr(newPr)), phaseEnd, pauseStart)
+    case None => this
+  }
+
+  def withCountryIncome(country: String, pr: Int, increment: Boolean): GameState = countryPRs.get(country) match {
+    case Some(currentPr) => GameState(turn, phaseIndex, terrorLevel, countryPRs.updated(country, currentPr.withIncome(pr, increment)), phaseEnd, pauseStart)
     case None => this
   }
 
@@ -137,9 +143,18 @@ object GameStateFormat {
 }
 
 case class CountryPR(pr: Int, incomeLevels: SortedMap[Int, Int]) {
+
   lazy val income = incomeLevels.getOrElse(pr, 0)
 
   def withPr(newPr: Int) = CountryPR(newPr, incomeLevels)
+
+  def withIncome(prToUpdate: Int, increment: Boolean) = {
+    val newIncome =
+      if(increment) incomeLevels(prToUpdate) + 1
+      else incomeLevels(prToUpdate) - 1
+
+    CountryPR(pr, incomeLevels.updated(prToUpdate, newIncome))
+  }
 }
 
 object CountryPRFormat {

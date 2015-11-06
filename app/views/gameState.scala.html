@@ -30,13 +30,16 @@
     </div>
     <div class="small-12 medium-6 large-3 large-push-6 columns">
         <h2 class="text-center">Latest News</h2>
-
-        @for(tweet <- tweets) {
-            <div class="panel" data-tweet-id="@tweet.id">
-                <p>@tweet.text</p>
-                <p class="text-right">@tweet.posted.format(DateTimeFormatter.ofPattern("H:mm:ss").withZone(ZoneId.systemDefault()))</p>
-            </div>
-        }
+        <div class="tweet-container">
+            <script class="tweet-template" type="text/x-handlebars-template">
+                {{#each tweets}}
+                    <div class="panel" data-tweet-id="{{ id }}">
+                        <p>{{ text }}</p>
+                        <p class="text-right">{{ posted }}</p>
+                    </div>
+                {{/each}}
+            </script>
+        </div>
     </div>
     <div class="small-12 large-6 large-pull-3 columns">
         <h2 class="text-center">Income</h2>

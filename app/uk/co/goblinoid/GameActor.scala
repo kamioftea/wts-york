@@ -31,6 +31,8 @@ object GameActor {
 
   case class PrUpdate(country: String, pr: Int) extends GameActorMessage
 
+  case class IncomeUpdate(country: String, pr: Int, increment: Boolean) extends GameActorMessage
+
   case class AdvancePhase() extends GameActorMessage
 
   case class RegressPhase() extends GameActorMessage
@@ -115,6 +117,12 @@ class GameActor(stateFile: Path) extends Actor {
       val newState: GameState = state.withCountryPr(country, newPr)
       stateToFile(newState)
       
+      become(buildReceive(newState, ticker))
+
+    case IncomeUpdate(country, pr, increment) =>
+      val newState: GameState = state.withCountryIncome(country, pr, increment)
+      stateToFile(newState)
+
       become(buildReceive(newState, ticker))
 
     case AdvancePhase() =>

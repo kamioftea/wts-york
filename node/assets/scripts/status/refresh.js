@@ -1,16 +1,41 @@
 $(function () {
-	var url = '/status.json'; //todo reverse routing in JS
-	var interval = 1000; // 5 seconds
+	var tweetUrl = '/tweets.json'; //todo reverse routing in JS
+	var stateUrl = '/status.json'; //todo reverse routing in JS
+	var interval = 1000; // 1 second
 
 	function getAjaxResponse(request) {
 		return Bacon.fromPromise($.ajax(request))
 	}
 
-	var request = {url: url}
+	var tweetRequest = {url: tweetUrl};
+
+	var tweetStream = Bacon.once(tweetRequest)
+			.merge(Bacon.interval(interval, tweetRequest))
+			.flatMap(getAjaxResponse);
+
+	/****************************************************
+	 * Tweets
+	 ****************************************************/
+
+	$('.tweet-container').each(function(){
+		var $container = $(this);
+		var template = Handlebars.compile($container.find('.tweet-template').first().html());
+
+		tweetStream.onValue(function(tweets){
+			$container.html(template({tweets: tweets}))
+		})
+
+	});
+
+	/****************************************************
+	 * Game Status
+	 ****************************************************/
+
+	var stateRequest = {url: stateUrl};
 
 	var updateStream =
-		Bacon.once(request)
-			.merge(Bacon.interval(interval, request))
+		Bacon.once(stateRequest)
+			.merge(Bacon.interval(interval, stateRequest))
 			.flatMap(getAjaxResponse);
 
 	// Update World terror dial(s)
@@ -28,7 +53,7 @@ $(function () {
 
 	// Update pr lists
 	$('.pr-list').each(function () {
-		var $list = $(this)
+		var $list = $(this);
 		var countryName = $list.data('country');
 
 		updateStream.onValue(function (gameStatus) {
@@ -36,6 +61,18 @@ $(function () {
 				var newPr = gameStatus.countryPRs[countryName];
 				$list.find('.pr-item').removeClass('current');
 				$list.find('.pr-item[data-pr-level=' + newPr + ']').addClass('current');
+			}
+
+			if (gameStatus.countryIncomes !== undefined && gameStatus.countryIncomes[countryName] !== undefined) {
+				var incomes = gameStatus.countryIncomes[countryName];
+				for (var i in incomes)
+				{
+					var income = incomes[i];
+					var prLevel = parseInt(i) + 1;
+					console.log('.pr-item[data-pr-level=' + prLevel + '] => ' + income);
+					$list.find('.pr-item[data-pr-level=' + prLevel + ']').html(income);
+				}
+
 			}
 		});
 	});

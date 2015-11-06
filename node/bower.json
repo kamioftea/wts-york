@@ -17,6 +17,7 @@
   "dependencies": {
     "foundation": "~5.5.2",
     "bacon": "~0.7.74",
-    "components-font-awesome": "~4.3.0"
+    "components-font-awesome": "~4.3.0",
+    "handlebars": "~4.0.4"
   }
 }

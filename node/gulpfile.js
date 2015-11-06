@@ -27,6 +27,7 @@ var paths = {
 		'./bower_components/foundation/js/foundation/foundation.alert.js',
 		'./bower_components/fastclick/lib/fastclick.js',
 		'./bower_components/bacon/dist/Bacon.js',
+		'./bower_components/handlebars/handlebars.js',
 		'./assets/scripts/*'
 	],
 	script_folder_root: './assets/scripts',

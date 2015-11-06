@@ -15,10 +15,12 @@ GET     /user/logout                controllers.User.logout
 # Status Page
 GET     /status                     controllers.Status.index
 GET     /status.json                controllers.Status.gameState
+GET     /tweets.json                controllers.Status.tweets
 GET     /status/edit                controllers.Status.editGameState
 
 POST    /status/terror              controllers.Status.updateTerror
 POST    /status/pr                  controllers.Status.updatePr
+POST    /status/income              controllers.Status.updateIncome
 
 POST    /status/advance-phase       controllers.Status.advancePhase
 POST    /status/regress-phase       controllers.Status.regressPhase

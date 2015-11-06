@@ -1,6 +1,8 @@
 package controllers
 
 import java.nio.file.Paths
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 import javax.inject._
 
 import akka.actor._
@@ -12,12 +14,9 @@ import play.api.data.Forms._
 import play.api.data._
 import play.api.i18n.Messages.Implicits._
 import play.api.libs.json._
-import play.api.libs.oauth.OAuthCalculator
-import play.api.libs.ws.WS
 import play.api.mvc._
 import uk.co.goblinoid.auth.{Admin, AuthConfig}
-import uk.co.goblinoid.twitter.{Tweet, Twitter}
-import uk.co.goblinoid.util.OAuthCredentials
+import uk.co.goblinoid.twitter.{TweetListActor, Tweet}
 import uk.co.goblinoid.{GameActor, GameState}
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -31,12 +30,14 @@ class Status @Inject()(system: ActorSystem) extends Controller with AuthElement 
   implicit val timeout = Timeout(1 second)
 
   import GameActor._
+  import uk.co.goblinoid.twitter.TweetListActor._
 
   val filePath = Paths.get(current.configuration.getString("game.filepath").getOrElse("default-game.json"))
 
   val gameActor = system.actorOf(GameActor.props(filePath), "game-actor")
+  val tweetActor = system.actorOf(TweetListActor.props(), "tweet-actor")
 
-  def index = AsyncStack(AuthorityKey -> Admin) { _ =>
+  def index = Action.async { _ =>
     for {
       gameState <- getGameState
       tweets <- getTweets
@@ -59,11 +60,12 @@ class Status @Inject()(system: ActorSystem) extends Controller with AuthElement 
       "turn" -> state.turn,
       "phase" -> phase,
       "terrorLevel" -> state.terrorStep(-90, 90, 25),
-      "countryPRs" -> state.countryPRs.mapValues(_.pr)
+      "countryPRs" -> state.countryPRs.mapValues(_.pr),
+      "countryIncomes" -> state.countryPRs.mapValues(_.incomeLevels.values)
     )
   }
 
-  def gameState = AsyncStack(AuthorityKey -> Admin) { _ =>
+  def gameState = Action.async { _ =>
     getGameState map { gameState =>
       val json = buildGameStateJson(gameState)
 
@@ -76,7 +78,8 @@ class Status @Inject()(system: ActorSystem) extends Controller with AuthElement 
         Ok(views.html.editGameState(
           gameState,
           terrorForm.fill(TerrorUpdate(gameState.terrorLevel)),
-          prForm
+          prForm,
+          incomeForm
         ))
     }
   }
@@ -86,16 +89,24 @@ class Status @Inject()(system: ActorSystem) extends Controller with AuthElement 
   }
 
   def getTweets: Future[Seq[Tweet]] = {
-    OAuthCredentials.fromConfig("twitter") match {
-      case Some(twitterOAuth) =>
-        WS.url("https://api.twitter.com/1.1/statuses/user_timeline.json?count=10&exclude_replies=true")
-          .sign(OAuthCalculator(twitterOAuth.consumerKey, twitterOAuth.requestToken))
-          .withRequestTimeout(2000)
-          .get()
-          .map(result => Twitter.toTweets(result.json))
-      case _ => Future {
-        Seq()
-      }
+    (tweetActor ? GetTweets).map {
+      case SendTweets(tweets) => tweets
+      case _ => Seq()
+    }
+  }
+
+  def tweets = Action.async { _ =>
+
+    def asJson(tweet: Tweet) = Json.obj(
+      "id" -> JsString(tweet.id.toString()),
+      "text" -> JsString(tweet.text),
+      "posted" -> JsString(tweet.posted.format(DateTimeFormatter.ofPattern("H:mm:ss").withZone(ZoneId.systemDefault())))
+    )
+
+    implicit val writesTweet: Writes[Tweet] = Writes[Tweet] {tweet => asJson(tweet)}
+
+    getTweets.map {
+      tweets => Ok(Json.toJson(tweets))
     }
   }
 
@@ -119,7 +130,7 @@ class Status @Inject()(system: ActorSystem) extends Controller with AuthElement 
     Form(
       mapping(
         "country" -> text(),
-        "pr" -> number(min=1, max=8)
+        "pr" -> number(min = 1, max = 8)
       )(PrUpdate.apply)(PrUpdate.unapply)
     )
   }
@@ -127,6 +138,24 @@ class Status @Inject()(system: ActorSystem) extends Controller with AuthElement 
   def updatePr() = StackAction(AuthorityKey -> Admin) { request =>
     prForm.bindFromRequest()(request).value.foreach(
       prUpdate => gameActor ! prUpdate
+    )
+
+    Redirect(routes.Status.editGameState())
+  }
+
+  val incomeForm: Form[IncomeUpdate] = {
+    Form(
+      mapping(
+        "country" -> text(),
+        "pr" -> number(min=1, max=8),
+        "increment" -> boolean
+      )(IncomeUpdate.apply)(IncomeUpdate.unapply)
+    )
+  }
+
+  def updateIncome() = StackAction(AuthorityKey -> Admin) { request =>
+    incomeForm.bindFromRequest()(request).value.foreach(
+      incomeUpdate => gameActor ! incomeUpdate
     )
 
     Redirect(routes.Status.editGameState())

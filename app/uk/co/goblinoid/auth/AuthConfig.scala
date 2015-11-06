@@ -122,6 +122,7 @@ trait AuthConfig extends BaseAuthConfig {
     (user.role, authority) match {
       case (Admin, _) => true
       case (RegisteredUser, RegisteredUser) => true
+      case (_, Guest) => true
       case _ => false
     }
   }
