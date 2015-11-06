@@ -21,7 +21,10 @@ case class GameState(turn: Int,
       Phase.phases(phaseIndex - 1)
     else
       // TODO: Load from config
-      Phase("Watch the Skies hasn't started yet", Seq(Activity("Starts", "9am, 7th November 2015")), Duration.ZERO)
+      Phase("Watch the Skies hasn't started yet", Seq(
+        Activity("Starts", "9am, 7th November 2015"),
+        Activity("Location", "D Bar, University of York"),
+      ), Duration.ZERO)
 
   def terrorStep(min: Int, max: Int, step: Int = 1): Int = {
     if (step == 0) throw new IllegalArgumentException("Step must not be 0")
