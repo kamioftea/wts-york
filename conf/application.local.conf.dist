@@ -2,7 +2,8 @@ twitter: {
   consumer_key: ,
   consumer_secret: ,
   access_token: ,
-  access_secret:
+  access_secret: ,
+  screen_name: #optional
 }
 
 smtp: {
