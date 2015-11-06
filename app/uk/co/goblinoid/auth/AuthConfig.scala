@@ -47,13 +47,15 @@ trait AuthConfig extends BaseAuthConfig {
    */
   val sessionTimeoutInSeconds: Int = 3600
 
+  val adminMatcher = "admin\\d*".r
+
   /**
    * A function that returns a `User` object from an `Id`.
    * You can alter the procedure to suit your application.
    */
   def resolveUser(id: Id)(implicit ctx: ExecutionContext): Future[Option[User]] = Future.successful(
     id match {
-      case "admin" => Some(Account("Admin", Admin))
+      case adminMatcher() => Some(Account("Admin", Admin))
       case "guest" => Some(Account("Guest", Guest))
       case _ => None
     }
