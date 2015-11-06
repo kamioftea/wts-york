@@ -33,9 +33,10 @@ class Status @Inject()(system: ActorSystem) extends Controller with AuthElement 
   import uk.co.goblinoid.twitter.TweetListActor._
 
   val filePath = Paths.get(current.configuration.getString("game.filepath").getOrElse("default-game.json"))
-
   val gameActor = system.actorOf(GameActor.props(filePath), "game-actor")
-  val tweetActor = system.actorOf(TweetListActor.props(), "tweet-actor")
+
+  val screenName = current.configuration.getString("twitter.screen_name")
+  val tweetActor = system.actorOf(TweetListActor.props(screenName), "tweet-actor")
 
   def index = Action.async { _ =>
     for {
