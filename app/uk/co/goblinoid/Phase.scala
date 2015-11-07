@@ -14,7 +14,7 @@ case class Activity(group: String, description: String)
 object Phase {
   val phases = Vector(
     Phase(
-      "Operations Phase (Allocation)", 
+      "1 - Operations Phase (Allocation)", 
       Seq(
         Activity("UN Ambassadors", "Go to the Security Council table."), 
         Activity("Diplomats","Buy influence cards from nation control."), 
@@ -24,7 +24,7 @@ object Phase {
       Duration.ofSeconds(20)
     ),
     Phase(
-      "Operations Phase (Place Units)",
+      "2 - Operations Phase (Place Units)",
       Seq(
         Activity("UN Ambassadors", "Discuss current issues and crises. Draft and agree on any security council resolutions."),
         Activity("Diplomats", "Circulate and conduct diplomacy. May visit the UN, but not interrupt."),
@@ -34,7 +34,7 @@ object Phase {
       Duration.ofMinutes(5)
     ),
     Phase(
-      "Operations Phase (Resolve Interceptions)",
+      "3 - Operations Phase (Resolve Interceptions)",
       Seq(
         Activity("UN Ambassadors", "Discuss current issues and crises. Draft and agree on any security council resolutions."),
         Activity("Diplomats", "Circulate and conduct diplomacy. May visit the UN, but not interrupt."),
@@ -44,7 +44,7 @@ object Phase {
       Duration.ofMinutes(5)
     ),
     Phase(
-      "Operations Phase (Resolve Ground Forces)",
+      "4 - Operations Phase (Resolve Ground Forces)",
       Seq(
         Activity("UN Ambassadors", "Discuss current issues and crises. Draft and agree on any security council resolutions."),
         Activity("Diplomats", "Circulate and conduct diplomacy. May visit the UN, but not interrupt."),
@@ -54,7 +54,7 @@ object Phase {
       Duration.ofMinutes(5)
     ),
     Phase(
-      "End of Operations Phase",
+      "5 - End of Operations Phase",
       Seq(
         Activity("All players", "Return to team tables."),
         Activity("Control", "Update PR tracks.")
@@ -62,7 +62,7 @@ object Phase {
       Duration.ofSeconds(20)
     ),
     Phase(
-      "Mid Turn Team Time",
+      "6 - Mid Turn Team Time",
       Seq(
         Activity("All players", "Report back to teams and plan for the next diplomacy phase."),
         Activity("Media", "May perform an announcement.")
@@ -70,7 +70,7 @@ object Phase {
       Duration.ofMinutes(5)
     ),
     Phase(
-      "Diplomacy Phase",
+      "7 - Diplomacy Phase",
       Seq(
         Activity("Diplomats", "May go to the world map to resolve political/agent actions."),
         Activity("Scientists", "May attend ONE science conference OR trade fair."),
@@ -80,14 +80,14 @@ object Phase {
       Duration.ofMinutes(14)
     ),
     Phase(
-      "End of Diplomacy Phase",
+      "7 - End of Diplomacy Phase",
       Seq(
         Activity("All players", "Return to team tables.")
       ),
       Duration.ofSeconds(20)
     ),
     Phase(
-      "End of Turn Team Time",
+      "8 - End of Turn Team Time",
       Seq(
         Activity("All players", "Report back to teams and plan for the next turn's operations phase."),
         Activity("Media", "May perform an announcement."))
