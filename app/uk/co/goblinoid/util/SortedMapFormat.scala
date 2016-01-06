@@ -20,7 +20,9 @@ object SortedMapFormat {
       (JsPath \ "v").write[U]
     ).tupled
 
-  implicit def readsSortedMap[T,U](implicit r: Reads[Seq[(T, U)]], o: Ordering[T]): Reads[SortedMap[T, U]] = __.read[Seq[(T, U)]].map(_.foldLeft(SortedMap[T, U]())({ case (map, (k, v)) => map.updated(k, v) }))
+  implicit def readsSortedMap[T,U](implicit r: Reads[Seq[(T, U)]], o: Ordering[T]): Reads[SortedMap[T, U]] =
+    __.read[Seq[(T, U)]].map(_.foldLeft(SortedMap[T, U]())({ case (map, (k, v)) => map.updated(k, v) }))
 
-  implicit def writesSortedMap[T,U](implicit w: Writes[Seq[(T, U)]]): Writes[SortedMap[T, U]] = Writes(map => w.writes(map.toSeq))
+  implicit def writesSortedMap[T,U](implicit w: Writes[Seq[(T, U)]]): Writes[SortedMap[T, U]] =
+    Writes(map => w.writes(map.toSeq))
 }

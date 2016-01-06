@@ -22,7 +22,7 @@ import scala.language.postfixOps
 class Application @Inject()(@Named("email-actor") emailActor: ActorRef)
                            (implicit ec: ExecutionContext) extends Controller {
 
-  implicit val timeout = Timeout(30 seconds)
+  implicit val timeout = Timeout(5 seconds)
 
   val roles = Seq(
     "Head Of State",

@@ -27,3 +27,6 @@ routesGenerator := InjectedRoutesGenerator
 fork in run := true
 
 scalacOptions += "-feature"
+
+
+fork in run := true

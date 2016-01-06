@@ -1,6 +1,7 @@
 package uk.co.goblinoid.twitter
 
 import akka.actor._
+import play.api.Logger
 import play.api.libs.oauth.OAuthCalculator
 import play.api.libs.ws.WS
 import uk.co.goblinoid.util.OAuthCredentials
@@ -41,6 +42,8 @@ class TweetListActor(screenName: Option[String]) extends Actor
   val queryString = params map {case (k,v) => s"$k=$v"} mkString "&"
 
   val url = "https://api.twitter.com/1.1/statuses/user_timeline.json?" + queryString
+
+  Logger.error(url);
 
   private def getTweets = OAuthCredentials.fromConfig("twitter") match {
     case Some(twitterOAuth) =>

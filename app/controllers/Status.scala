@@ -148,7 +148,7 @@ class Status @Inject()(system: ActorSystem) extends Controller with AuthElement 
     Form(
       mapping(
         "country" -> text(),
-        "pr" -> number(min=1, max=9),
+        "pr" -> number(min = 1, max = 9),
         "increment" -> boolean
       )(IncomeUpdate.apply)(IncomeUpdate.unapply)
     )

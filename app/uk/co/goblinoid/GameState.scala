@@ -37,15 +37,15 @@ case class GameState(turn: Int,
       (terrorLevel / step) * ((max - min) / step_factor) + min
   }
 
-  def withTerror(newTerror: Int) = GameState(turn, phaseIndex, newTerror, countryPRs, phaseEnd, pauseStart)
+  def withTerror(newTerror: Int) = copy(terrorLevel = newTerror)
 
   def withCountryPr(country: String, newPr: Int) = countryPRs.get(country) match {
-    case Some(currentPr) => GameState(turn, phaseIndex, terrorLevel, countryPRs.updated(country, currentPr.withPr(newPr)), phaseEnd, pauseStart)
+    case Some(currentPr) => copy(countryPRs = countryPRs.updated(country, currentPr.withPr(newPr)))
     case None => this
   }
 
   def withCountryIncome(country: String, pr: Int, increment: Boolean): GameState = countryPRs.get(country) match {
-    case Some(currentPr) => GameState(turn, phaseIndex, terrorLevel, countryPRs.updated(country, currentPr.withIncome(pr, increment)), phaseEnd, pauseStart)
+    case Some(currentPr) => copy(countryPRs = countryPRs.updated(country, currentPr.withIncome(pr, increment)))
     case None => this
   }
 
@@ -56,7 +56,7 @@ case class GameState(turn: Int,
     val newPhaseEnd = phaseEnd map { _ => LocalDateTime.now plus newPhase.duration }
     val newPauseStart = pauseStart map { _ => LocalDateTime.now }
 
-    GameState(newTurn, newPhaseIndex, terrorLevel, countryPRs, newPhaseEnd, newPauseStart)
+    copy(turn = newTurn, phaseEnd = newPhaseEnd, pauseStart = newPauseStart)
   }
 
   def advancePhase() = {
@@ -83,11 +83,11 @@ case class GameState(turn: Int,
     case (Some(oldPhaseEnd), Some(oldPauseStart)) =>
       // Paused
       val pauseLength = Duration.between(oldPauseStart, LocalDateTime.now)
-      GameState(turn, phaseIndex, terrorLevel, countryPRs, Some(oldPhaseEnd plus pauseLength), None)
+      copy(phaseEnd = Some(oldPhaseEnd plus pauseLength), pauseStart = None)
 
     case (None, _) =>
       // Stopped
-      GameState(turn, phaseIndex, terrorLevel, countryPRs, Some(LocalDateTime.now plus phase.duration), None)
+      copy(phaseEnd = Some(LocalDateTime.now plus phase.duration), pauseStart = None)
 
     case _ =>
       // Already Started
@@ -97,16 +97,16 @@ case class GameState(turn: Int,
   def paused() = (phaseEnd, pauseStart) match {
     case (Some(_), None) =>
       // Started
-      GameState(turn, phaseIndex, terrorLevel, countryPRs, phaseEnd, Some(LocalDateTime.now))
+      copy(pauseStart = Some(LocalDateTime.now))
 
     case _ =>
       // Already Stopped or Paused
       this
   }
 
-  def stopped() = GameState(turn, phaseIndex, terrorLevel, countryPRs, None, None)
+  def stopped() = copy(phaseEnd = None, pauseStart = None)
 
-  def isStarted = phaseEnd.isDefined && pauseStart.isEmpty
+  lazy val isStarted = phaseEnd.isDefined && pauseStart.isEmpty
 }
 
 object GameState {
@@ -149,14 +149,14 @@ case class CountryPR(pr: Int, incomeLevels: SortedMap[Int, Int]) {
 
   lazy val income = incomeLevels.getOrElse(pr, 0)
 
-  def withPr(newPr: Int) = CountryPR(newPr, incomeLevels)
+  def withPr(newPr: Int) = copy(pr = newPr)
 
   def withIncome(prToUpdate: Int, increment: Boolean) = {
     val newIncome =
       if(increment) incomeLevels(prToUpdate) + 1
       else incomeLevels(prToUpdate) - 1
 
-    CountryPR(pr, incomeLevels.updated(prToUpdate, newIncome))
+    copy(incomeLevels = incomeLevels.updated(prToUpdate, newIncome))
   }
 }
 

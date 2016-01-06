@@ -101,26 +101,24 @@ class GameActor(stateFile: Path) extends Actor {
       Files.copy(stateFile, backupFile)
   }
 
-  val ticker: Option[Cancellable] = None
-
   def buildReceive(state: GameState, ticker: Option[Cancellable]): Receive = {
     case GetGameState() =>
       sender() ! state
 
     case TerrorUpdate(newTerror) =>
-      val newState: GameState = state.withTerror(newTerror)
+      val newState = state.withTerror(newTerror)
       stateToFile(newState)
       
       become(buildReceive(newState, ticker))
 
     case PrUpdate(country, newPr) =>
-      val newState: GameState = state.withCountryPr(country, newPr)
+      val newState = state.withCountryPr(country, newPr)
       stateToFile(newState)
       
       become(buildReceive(newState, ticker))
 
     case IncomeUpdate(country, pr, increment) =>
-      val newState: GameState = state.withCountryIncome(country, pr, increment)
+      val newState = state.withCountryIncome(country, pr, increment)
       stateToFile(newState)
 
       become(buildReceive(newState, ticker))
