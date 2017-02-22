@@ -3,13 +3,11 @@ package controllers
 import jp.t2v.lab.play2.auth.LoginLogout
 import play.api.Logger
 import play.api.data.Form
-import play.api.mvc.{Action, Controller}
-import uk.co.goblinoid.auth.{Account, Guest, AuthConfig}
-
+import play.api.mvc.{Action, AnyContent, Controller}
+import uk.co.goblinoid.auth.{Account, AuthConfig, Guest}
 import play.api.data.Forms._
 
 import scala.concurrent.ExecutionContext.Implicits.global
-
 import play.api.Play.current
 import play.api.i18n.Messages.Implicits._
 
@@ -20,7 +18,7 @@ import play.api.i18n.Messages.Implicits._
 class User extends Controller with LoginLogout with AuthConfig {
 
   /** Your application's login form.  Alter it to fit your application */
-  val loginForm = Form[Account] {
+  val loginForm: Form[Account] = Form[Account] {
     mapping("username" -> text, "password" -> text)(Account.authenticate)(u => Some(u.name, ""))
       .verifying("Invalid username or password", user => user.role != Guest)
   }
@@ -40,7 +38,7 @@ class User extends Controller with LoginLogout with AuthConfig {
    * "success" -> "You've been logged out"
    * ))
    */
-  def logout = Action.async { implicit request =>
+  def logout: Action[AnyContent] = Action.async { implicit request =>
     // do something...
     gotoLogoutSucceeded.map(_.flashing(
       "icon" -> "fa fa-check-circle",
@@ -55,7 +53,7 @@ class User extends Controller with LoginLogout with AuthConfig {
    * Since the `gotoLoginSucceeded` returns `Future[Result]`,
    * you can add a procedure like the `gotoLogoutSucceeded`.
    */
-  def authenticate = Action.async { implicit request =>
+  def authenticate: Action[AnyContent] = Action.async { implicit request =>
     loginForm.bindFromRequest.fold(
       formWithErrors =>
         authenticationFailed(request).map(_.flashing(

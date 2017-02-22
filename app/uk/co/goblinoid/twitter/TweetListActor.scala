@@ -16,13 +16,15 @@ object TweetListActor {
 
   sealed trait TweetListMessages
 
-  case object GetTweets extends TweetListMessages
+  case class GetTweets(count: Int = 5) extends TweetListMessages
 
   case class SendTweets(tweets: Seq[Tweet]) extends TweetListMessages
 
   case class RefreshTweets(tweets: Seq[Tweet]) extends TweetListMessages
 
   case object RefreshTweetsTick extends TweetListMessages
+
+  val USER_TIMELINE_URL = "https://api.twitter.com/1.1/statuses/user_timeline.json"
 }
 
 /**
@@ -34,21 +36,15 @@ class TweetListActor(screenName: Option[String]) extends Actor
   import TweetListActor._
   import context._
 
-  val params = Map(
-    "count" -> "5",
-    "exclude_replies" -> "true"
-  ) ++ (screenName map ("screen_name" -> _))
-
-  val queryString = params map {case (k,v) => s"$k=$v"} mkString "&"
-
-  val url = "https://api.twitter.com/1.1/statuses/user_timeline.json?" + queryString
-
-  Logger.error(url);
+  val params: Map[String, String] = Map(
+    "count" -> "20"
+  ) ++ ( screenName map ("screen_name" -> _))
 
   private def getTweets = OAuthCredentials.fromConfig("twitter") match {
     case Some(twitterOAuth) =>
 
-      WS.url(url)
+      WS.url(USER_TIMELINE_URL)
+        .withQueryString(params.toList: _*)
         .sign(OAuthCalculator(twitterOAuth.consumerKey, twitterOAuth.requestToken))
         .withRequestTimeout(2000)
         .get()
@@ -58,16 +54,18 @@ class TweetListActor(screenName: Option[String]) extends Actor
     }
   }
 
-  val ticker = system.scheduler.schedule(0.second, 10.second, self, RefreshTweetsTick)
+  system.scheduler.schedule(0.second, 10.second, self, RefreshTweetsTick)
 
   def buildReceive(tweets: Seq[Tweet]): Receive = {
-    case GetTweets =>
-      sender() ! SendTweets(tweets)
+    case GetTweets(count) =>
+      sender() ! SendTweets(tweets.take(count))
     case RefreshTweetsTick =>
       getTweets.onSuccess { case newTweets => self ! RefreshTweets(newTweets) }
     case RefreshTweets(newTweets) =>
       become(buildReceive(newTweets))
   }
 
-  def receive = buildReceive(Seq())
+  def receive: Receive = buildReceive(Seq())
+
+
 }

@@ -28,6 +28,7 @@ var paths = {
 		'./bower_components/fastclick/lib/fastclick.js',
 		'./bower_components/bacon/dist/Bacon.js',
 		'./bower_components/handlebars/handlebars.js',
+        './node_modules/humanize-duration/humanize-duration.js',
 		'./assets/scripts/*'
 	],
 	script_folder_root: './assets/scripts',

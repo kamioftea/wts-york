@@ -51,7 +51,7 @@ class Application @Inject()(@Named("email-actor") emailActor: ActorRef)
       Ok(views.html.index(emailForm, roles))
   }
 
-  def sendEmail = Action.async(
+  def sendEmail: Action[AnyContent] = Action.async(
   {
     implicit request =>
       // Bind the submission

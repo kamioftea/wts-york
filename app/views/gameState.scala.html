@@ -11,7 +11,7 @@
     <div class="small-12 medium-6 large-3 columns">
         <div class="row">
             <div class="small-12 columns">
-                @status.worldTerror(gameState.terrorStep(-90, 90, 25))
+                @status.worldTerror(gameState.terrorStep(-90, 90))
 
                 <div class="panel">
                     <h1 class="text-center turn">Turn @gameState.turn</h1>
@@ -23,6 +23,7 @@
                             <dd>@activity.description</dd>
                         }
                     </dl>
+                    <h1 class="text-center turn-countdown"></h1>
                 </div>
             </div>
         </div>
@@ -33,7 +34,7 @@
         <div class="tweet-container">
             <script class="tweet-template" type="text/x-handlebars-template">
                 {{#each tweets}}
-                    <div class="panel tweet" data-tweet-id="{{ id }}">
+                    <div class="panel tweet {{#if bold }}text-bold{{/if}}" data-tweet-id="{{ id }}">
                         <p>{{ text }}</p>
                         <p class="text-right">{{ posted }}</p>
                     </div>

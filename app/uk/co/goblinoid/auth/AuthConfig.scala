@@ -2,12 +2,13 @@ package uk.co.goblinoid.auth
 
 
 import controllers.routes
-import jp.t2v.lab.play2.auth.{AuthConfig => BaseAuthConfig, CookieTokenAccessor}
+import jp.t2v.lab.play2.auth.{CookieTokenAccessor, AuthConfig => BaseAuthConfig}
 import play.api.Logger
-import play.api.mvc.{Results, Result, RequestHeader}
+import play.api.mvc.{RequestHeader, Result, Results}
 
 import scala.reflect._
-import scala.concurrent.{Future, ExecutionContext}
+import scala.concurrent.{ExecutionContext, Future}
+import scala.util.matching.Regex
 
 /**
  * @see https://github.com/t2v/play2-auth
@@ -47,7 +48,7 @@ trait AuthConfig extends BaseAuthConfig {
    */
   val sessionTimeoutInSeconds: Int = 3600
 
-  val adminMatcher = "admin\\d*".r
+  val adminMatcher: Regex = "admin\\d*".r
 
   /**
    * A function that returns a `User` object from an `Id`.

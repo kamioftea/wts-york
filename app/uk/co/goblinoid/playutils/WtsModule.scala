@@ -8,7 +8,7 @@ import uk.co.goblinoid.EmailActor
  * Module for providing Guice injections
  */
 class WtsModule extends AbstractModule with AkkaGuiceSupport {
-  def configure() = {
+  def configure(): Unit = {
     bindActor[EmailActor]("email-actor")
   }
 }

@@ -45,6 +45,8 @@ object GameActor {
 
   case class Reset() extends GameActorMessage
 
+  case class ToggleBold(id: BigInt, isBold: Boolean) extends GameActorMessage
+
 }
 
 class GameActor(stateFile: Path) extends Actor {
@@ -88,7 +90,7 @@ class GameActor(stateFile: Path) extends Actor {
     Files.write(stateFile, Json.stringify(Json.toJson(state.paused())).getBytes(StandardCharsets.UTF_8))
   }
 
-  val state = stateFromFile.getOrElse(defaultState)
+  val state: GameState = stateFromFile.getOrElse(defaultState)
 
   def backupState(state: GameState): Unit = {
     val (base, ext) = stateFile.getFileName.toString.span(_.toString != ".")
@@ -178,7 +180,17 @@ class GameActor(stateFile: Path) extends Actor {
       stateToFile(newState)
       
       become(buildReceive(newState, None))
+
+    case ToggleBold(id, true) =>
+      backupState(state)
+      val newState = state.withBold(state.boldTweetIds :+ id)
+      become(buildReceive(newState, ticker))
+
+    case ToggleBold(id, false) =>
+      backupState(state)
+      val newState = state.withBold(state.boldTweetIds.filter(_ != id))
+      become(buildReceive(newState, ticker))
   }
 
-  def receive = buildReceive(state, None)
+  def receive: Receive = buildReceive(state, None)
 }

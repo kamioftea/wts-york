@@ -1,6 +1,6 @@
 package controllers
 
-import java.nio.file.Paths
+import java.nio.file.{Path, Paths}
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import javax.inject._
@@ -16,7 +16,7 @@ import play.api.i18n.Messages.Implicits._
 import play.api.libs.json._
 import play.api.mvc._
 import uk.co.goblinoid.auth.{Admin, AuthConfig}
-import uk.co.goblinoid.twitter.{TweetListActor, Tweet}
+import uk.co.goblinoid.twitter.{Tweet, TweetListActor}
 import uk.co.goblinoid.{GameActor, GameState}
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -32,22 +32,24 @@ class Status @Inject()(system: ActorSystem) extends Controller with AuthElement 
   import GameActor._
   import uk.co.goblinoid.twitter.TweetListActor._
 
-  val filePath = Paths.get(current.configuration.getString("game.filepath").getOrElse("default-game.json"))
-  val gameActor = system.actorOf(GameActor.props(filePath), "game-actor")
+  val filePath: Path = Paths.get(current.configuration.getString("game.filepath").getOrElse("default-game.json"))
+  val gameActor: ActorRef = system.actorOf(GameActor.props(filePath), "game-actor")
 
-  val screenName = current.configuration.getString("twitter.screen_name")
-  val tweetActor = system.actorOf(TweetListActor.props(screenName), "tweet-actor")
+  val screenName: Option[String] = current.configuration.getString("twitter.screen_name")
+  val tweetActor: ActorRef = system.actorOf(TweetListActor.props(screenName), "tweet-actor")
 
-  def index = Action.async { _ =>
+  def index: Action[AnyContent] = Action.async { _ =>
     for {
       gameState <- getGameState
-      tweets <- getTweets
+      tweets <- getTweets()
     } yield {
       Ok(views.html.gameState(gameState, tweets))
     }
   }
 
-  def buildGameStateJson(state: GameState) = {
+  def buildGameStateJson(state: GameState): JsObject = {
+    import uk.co.goblinoid.twitter.Twitter.{writesTweet, bigIntWrites}
+
     val activities = state.phase.activities map {
       a => a.group -> JsString(a.description)
     }
@@ -60,13 +62,17 @@ class Status @Inject()(system: ActorSystem) extends Controller with AuthElement 
     Json.obj(
       "turn" -> state.turn,
       "phase" -> phase,
-      "terrorLevel" -> state.terrorStep(-90, 90, 25),
+      "phaseEnd" -> state.phaseEnd,
+      "paused" -> state.pauseStart.isDefined,
+      "terrorLevel" -> state.terrorStep(-90, 90, 1),
       "countryPRs" -> state.countryPRs.mapValues(_.pr),
-      "countryIncomes" -> state.countryPRs.mapValues(_.incomeLevels.values)
+      "countryIncomes" -> state.countryPRs.mapValues(_.incomeLevels.values),
+      "featuredTweet" -> state.featuredTweet,
+      "boldTweetIds" -> state.boldTweetIds
     )
   }
 
-  def gameState = Action.async { _ =>
+  def gameState: Action[AnyContent] = Action.async { _ =>
     getGameState map { gameState =>
       val json = buildGameStateJson(gameState)
 
@@ -74,7 +80,7 @@ class Status @Inject()(system: ActorSystem) extends Controller with AuthElement 
     }
   }
 
-  def editGameState = AsyncStack(AuthorityKey -> Admin) { _ =>
+  def editGameState: Action[AnyContent] = AsyncStack(AuthorityKey -> Admin) { _ =>
     getGameState map { gameState =>
         Ok(views.html.editGameState(
           gameState,
@@ -89,27 +95,21 @@ class Status @Inject()(system: ActorSystem) extends Controller with AuthElement 
     (gameActor ? GetGameState()).mapTo[GameState]
   }
 
-  def getTweets: Future[Seq[Tweet]] = {
-    (tweetActor ? GetTweets).map {
+  def getTweets(count: Int = 5): Future[Seq[Tweet]] = {
+    (tweetActor ? GetTweets(count)).map {
       case SendTweets(tweets) => tweets
       case _ => Seq()
     }
   }
 
-  def tweets = Action.async { _ =>
+  def tweets(count: Int = 5): Action[AnyContent] = Action.async { _ => {
 
-    def asJson(tweet: Tweet) = Json.obj(
-      "id" -> JsString(tweet.id.toString()),
-      "text" -> JsString(tweet.text),
-      "posted" -> JsString(tweet.posted.format(DateTimeFormatter.ofPattern("H:mm:ss").withZone(ZoneId.systemDefault())))
-    )
+    import uk.co.goblinoid.twitter.Twitter._
 
-    implicit val writesTweet: Writes[Tweet] = Writes[Tweet] {tweet => asJson(tweet)}
-
-    getTweets.map {
+    getTweets(count).map {
       tweets => Ok(Json.toJson(tweets))
     }
-  }
+  }}
 
   val terrorForm: Form[TerrorUpdate] = {
     Form(
@@ -119,7 +119,7 @@ class Status @Inject()(system: ActorSystem) extends Controller with AuthElement 
     )
   }
 
-  def updateTerror() = StackAction(AuthorityKey -> Admin) { request =>
+  def updateTerror(): Action[AnyContent] = StackAction(AuthorityKey -> Admin) { request =>
     terrorForm.bindFromRequest()(request).value.foreach(
       terrorUpdate => gameActor ! terrorUpdate
     )
@@ -136,7 +136,7 @@ class Status @Inject()(system: ActorSystem) extends Controller with AuthElement 
     )
   }
 
-  def updatePr() = StackAction(AuthorityKey -> Admin) { request =>
+  def updatePr(): Action[AnyContent] = StackAction(AuthorityKey -> Admin) { request =>
     prForm.bindFromRequest()(request).value.foreach(
       prUpdate => gameActor ! prUpdate
     )
@@ -154,7 +154,7 @@ class Status @Inject()(system: ActorSystem) extends Controller with AuthElement 
     )
   }
 
-  def updateIncome() = StackAction(AuthorityKey -> Admin) { request =>
+  def updateIncome(): Action[AnyContent] = StackAction(AuthorityKey -> Admin) { request =>
     incomeForm.bindFromRequest()(request).value.foreach(
       incomeUpdate => gameActor ! incomeUpdate
     )
@@ -162,28 +162,37 @@ class Status @Inject()(system: ActorSystem) extends Controller with AuthElement 
     Redirect(routes.Status.editGameState())
   }
 
-  def advancePhase() = StackAction(AuthorityKey -> Admin) { request =>
+  def advancePhase(): Action[AnyContent] = StackAction(AuthorityKey -> Admin) { request =>
     gameActor ! AdvancePhase()
     Redirect(routes.Status.editGameState())
   }
 
-  def regressPhase() = StackAction(AuthorityKey -> Admin) { request =>
+  def regressPhase(): Action[AnyContent] = StackAction(AuthorityKey -> Admin) { request =>
     gameActor ! RegressPhase()
     Redirect(routes.Status.editGameState())
   }
 
-  def start() = StackAction(AuthorityKey -> Admin) { request =>
+  def start(): Action[AnyContent] = StackAction(AuthorityKey -> Admin) { request =>
     gameActor ! Start()
     Redirect(routes.Status.editGameState())
   }
 
-  def pause() = StackAction(AuthorityKey -> Admin) { request =>
+  def pause(): Action[AnyContent] = StackAction(AuthorityKey -> Admin) { request =>
     gameActor ! Pause()
     Redirect(routes.Status.editGameState())
   }
 
-  def reset() = StackAction(AuthorityKey -> Admin) { request =>
+  def reset(): Action[AnyContent] = StackAction(AuthorityKey -> Admin) { request =>
     gameActor ! Reset()
     Redirect(routes.Status.editGameState())
+  }
+
+  def media() = Action { implicit request =>
+    Ok(views.html.media())
+  }
+
+  def toggleBold(id: String, isBold: Boolean) = Action { _ =>
+    gameActor ! ToggleBold(BigInt(id), isBold)
+    Ok(Json.obj("received" -> true))
   }
 }

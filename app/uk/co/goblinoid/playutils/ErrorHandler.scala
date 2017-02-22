@@ -16,7 +16,7 @@ class ErrorHandler @Inject() (
                                router: Provider[Router]
                                ) extends DefaultHttpErrorHandler(env, config, sourceMapper, router) {
 
-  override def onNotFound(request: RequestHeader, message: String) = {
+  override def onNotFound(request: RequestHeader, message: String): Future[Result] = {
     Future.successful(
       NotFound(views.html.error.notFound(request.uri, message))
     )

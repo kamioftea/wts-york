@@ -5,6 +5,8 @@ import java.time.format.DateTimeFormatter
 
 import _root_.play.api.libs.json._
 import _root_.play.api.libs.functional.syntax._
+import play.api.Logger
+import uk.co.goblinoid.twitter.Tweet
 
 import scala.collection.immutable.SortedMap
 
@@ -13,16 +15,18 @@ case class GameState(turn: Int,
                      terrorLevel: Int,
                      countryPRs: SortedMap[String, CountryPR],
                      phaseEnd: Option[LocalDateTime] = None,
-                     pauseStart: Option[LocalDateTime] = None) {
+                     pauseStart: Option[LocalDateTime] = None,
+                     featuredTweet: Option[Tweet] = None,
+                     boldTweetIds: Seq[BigInt] = Seq()) {
 
   // phaseIndex is 1 indexed due to game labelling
-  lazy val phase =
+  lazy val phase: Phase =
     if(Phase.phases.isDefinedAt(phaseIndex - 1))
       Phase.phases(phaseIndex - 1)
     else
       // TODO: Load from config
       Phase("Watch the Skies hasn't started yet", Seq(
-        Activity("Starts", "9am, 7th November 2015"),
+        Activity("Starts", "9am, 25th February 2017"),
         Activity("Location", "D Bar, University of York")
       ), Duration.ZERO)
 
@@ -34,12 +38,12 @@ case class GameState(turn: Int,
     if (step_factor == 0)
       max
     else
-      (terrorLevel / step) * ((max - min) / step_factor) + min
+      ((terrorLevel / step) * (max - min).toDouble / step_factor).toInt + min
   }
 
-  def withTerror(newTerror: Int) = copy(terrorLevel = newTerror)
+  def withTerror(newTerror: Int): GameState = copy(terrorLevel = newTerror)
 
-  def withCountryPr(country: String, newPr: Int) = countryPRs.get(country) match {
+  def withCountryPr(country: String, newPr: Int): GameState = countryPRs.get(country) match {
     case Some(currentPr) => copy(countryPRs = countryPRs.updated(country, currentPr.withPr(newPr)))
     case None => this
   }
@@ -50,16 +54,17 @@ case class GameState(turn: Int,
   }
 
   def setPhase(newTurn: Int, newPhaseIndex: Int): GameState = {
+    Logger.warn(s"newTurn: $newTurn, newPhaseIndex: $newPhaseIndex")
     val newPhase = Phase.phases(newPhaseIndex - 1)
 
     // We only want to update these if they are set, so map over the option
     val newPhaseEnd = phaseEnd map { _ => LocalDateTime.now plus newPhase.duration }
     val newPauseStart = pauseStart map { _ => LocalDateTime.now }
 
-    copy(turn = newTurn, phaseEnd = newPhaseEnd, pauseStart = newPauseStart)
+    copy(turn = newTurn, phaseIndex = newPhaseIndex, phaseEnd = newPhaseEnd, pauseStart = newPauseStart)
   }
 
-  def advancePhase() = {
+  def advancePhase(): GameState = {
     val (newTurn, newPhaseIndex) =
       if (this.phaseIndex >= Phase.phases.length)
         (turn + 1, 1)
@@ -69,7 +74,7 @@ case class GameState(turn: Int,
     setPhase(newTurn, newPhaseIndex)
   }
 
-  def regressPhase() = {
+  def regressPhase(): GameState = {
     val (newTurn, newPhaseIndex) =
       if (this.phaseIndex <= 1)
         (turn - 1, Phase.phases.length)
@@ -79,7 +84,7 @@ case class GameState(turn: Int,
     setPhase(newTurn, newPhaseIndex)
   }
 
-  def started() = (phaseEnd, pauseStart) match {
+  def started(): GameState = (phaseEnd, pauseStart) match {
     case (Some(oldPhaseEnd), Some(oldPauseStart)) =>
       // Paused
       val pauseLength = Duration.between(oldPauseStart, LocalDateTime.now)
@@ -94,7 +99,7 @@ case class GameState(turn: Int,
       this
   }
 
-  def paused() = (phaseEnd, pauseStart) match {
+  def paused(): GameState = (phaseEnd, pauseStart) match {
     case (Some(_), None) =>
       // Started
       copy(pauseStart = Some(LocalDateTime.now))
@@ -104,9 +109,11 @@ case class GameState(turn: Int,
       this
   }
 
-  def stopped() = copy(phaseEnd = None, pauseStart = None)
+  def stopped(): GameState = copy(phaseEnd = None, pauseStart = None)
 
-  lazy val isStarted = phaseEnd.isDefined && pauseStart.isEmpty
+  lazy val isStarted: Boolean = phaseEnd.isDefined && pauseStart.isEmpty
+
+  def withBold(ids: Seq[BigInt]): GameState = copy(boldTweetIds = ids)
 }
 
 object GameState {
@@ -117,11 +124,12 @@ object GameStateFormat {
 
   import uk.co.goblinoid.util.SortedMapFormat._
   import CountryPRFormat._
+  import twitter.Twitter._
 
   implicit val zonedDateTimeReads: Reads[LocalDateTime] =
     __.read[String].map(LocalDateTime.parse(_, DateTimeFormatter.ISO_DATE_TIME))
 
-  implicit val zonedDateTimeWrites = Writes[LocalDateTime] {
+  implicit val zonedDateTimeWrites: Writes[LocalDateTime] = Writes[LocalDateTime] {
     dateTime => JsString(dateTime.format(DateTimeFormatter.ISO_DATE_TIME))
   }
 
@@ -131,7 +139,9 @@ object GameStateFormat {
       (JsPath \ "terror_rank").read[Int] and
       (JsPath \ "country_prs").read[SortedMap[String, CountryPR]] and
       (JsPath \ "phase_start").readNullable[LocalDateTime] and
-      (JsPath \ "pause_start").readNullable[LocalDateTime]
+      (JsPath \ "pause_start").readNullable[LocalDateTime] and
+      (JsPath \ "featured_tweet").readNullable[Tweet] and
+      (JsPath \ "bold_tweet_ids").readNullable[Seq[BigInt]].map(_.getOrElse(Seq()))
     )(GameState.apply _)
 
   implicit val writesGameState: Writes[GameState] = (
@@ -140,18 +150,20 @@ object GameStateFormat {
       (JsPath \ "terror_rank").write[Int] and
       (JsPath \ "country_prs").write[SortedMap[String, CountryPR]] and
       (JsPath \ "phase_start").writeNullable[LocalDateTime] and
-      (JsPath \ "pause_start").writeNullable[LocalDateTime]
+      (JsPath \ "pause_start").writeNullable[LocalDateTime] and
+      (JsPath \ "featured_tweet").writeNullable[Tweet] and
+      (JsPath \ "bold_tweet_ids").write[Seq[BigInt]]
     )(unlift(GameState.unapply))
 
 }
 
 case class CountryPR(pr: Int, incomeLevels: SortedMap[Int, Int]) {
 
-  lazy val income = incomeLevels.getOrElse(pr, 0)
+  lazy val income: Int = incomeLevels.getOrElse(pr, 0)
 
-  def withPr(newPr: Int) = copy(pr = newPr)
+  def withPr(newPr: Int): CountryPR = copy(pr = newPr)
 
-  def withIncome(prToUpdate: Int, increment: Boolean) = {
+  def withIncome(prToUpdate: Int, increment: Boolean): CountryPR = {
     val newIncome =
       if(increment) incomeLevels(prToUpdate) + 1
       else incomeLevels(prToUpdate) - 1

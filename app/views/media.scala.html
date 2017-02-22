@@ -1,0 +1,27 @@
+@()
+
+@main(scripts = Seq(routes.Assets.versioned("javascripts/media.min.js"))) {
+    <ul class="small-block-grid-1 medium-block-grid-2 large-block-grid-4 tweet-container">
+
+    </ul>
+
+    <script class="tweet-template" type="text/x-handlebars-template">
+        {{#each tweets}}
+        <li>
+            <div class="panel tweet {{#if bold }}text-bold{{/if}} {{#if featured}}featured{{/if}}" data-tweet-id="{{ id }}">
+                <p>{{ text }}</p>
+
+                <div class="row">
+                    <div class="small-6 columns">
+                        <button class="button toggle-bold">Bold</button>
+                        <button class="button toggle=featured">Feat.</button>
+                    </div>
+                    <div class="small-6 columns text-right">
+                        <p class="text-right">{{ posted }}</p>
+                    </div>
+                </div>
+            </div>
+        </li>
+        {{/each}}
+    </script>
+}

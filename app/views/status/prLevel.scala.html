@@ -2,20 +2,19 @@
 
 @(countryName: String, countryPR: CountryPR)
 
-<div class="small-12 columns">
+<div class="small-3 columns">
     <div class="panel">
-        <div class="row">
-            <div class="small-3 columns">
-                <h3 class="pr-country-name">@countryName</h3>
+        <div class="row pr-container" data-country="@countryName">
+            <div class="small-12 columns text-center">
+                <h2 class="pr-country-name">@countryName</h2>
             </div>
-            <div class="small-9 columns">
-                <ul class="small-block-grid-9 pr-list" data-country="@countryName">
-                    @for((pr, income) <- countryPR.incomeLevels) {
-                        <li class="pr-item @if(pr == countryPR.pr){current}" data-pr-level="@pr">
-                            @income
-                        </li>
-                    }
-                </ul>
+            <div class="small-6 columns text-center">
+                <h3><small>PR</small></h3>
+                <h1 class="pr">@countryPR.pr</h1>
+            </div>
+            <div class="small-6 columns text-center">
+                <h3><small>Income</small></h3>
+                <h1 class="income">@countryPR.income</h1>
             </div>
         </div>
     </div>

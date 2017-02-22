@@ -13,6 +13,13 @@ $(function () {
 			.merge(Bacon.interval(interval, tweetRequest))
 			.flatMap(getAjaxResponse);
 
+    var stateRequest = {url: stateUrl};
+
+    var updateStream =
+        Bacon.once(stateRequest)
+            .merge(Bacon.interval(interval, stateRequest))
+            .flatMap(getAjaxResponse);
+
 	/****************************************************
 	 * Tweets
 	 ****************************************************/
@@ -21,7 +28,22 @@ $(function () {
 		var $container = $(this);
 		var template = Handlebars.compile($container.find('.tweet-template').first().html());
 
+		var featuredTweet = null;
+		var boldTweets = [];
+
+		updateStream.onValue(function (gameState) {
+            featuredTweet = gameState.featuredTweet;
+            boldTweets = gameState.boldTweetIds;
+        });
+
 		tweetStream.onValue(function(tweets){
+
+            tweets = tweets.map(function (t) {
+                return Object.assign({}, t, {
+                    bold:     boldTweets.indexOf(t.id) != -1
+                })
+            });
+
 			$container.html(template({tweets: tweets}))
 		})
 
@@ -30,13 +52,6 @@ $(function () {
 	/****************************************************
 	 * Game Status
 	 ****************************************************/
-
-	var stateRequest = {url: stateUrl};
-
-	var updateStream =
-		Bacon.once(stateRequest)
-			.merge(Bacon.interval(interval, stateRequest))
-			.flatMap(getAjaxResponse);
 
 	// Update World terror dial(s)
 	$('.world-terror-dial .hand').each(function () {
@@ -52,28 +67,26 @@ $(function () {
 	});
 
 	// Update pr lists
-	$('.pr-list').each(function () {
-		var $list = $(this);
-		var countryName = $list.data('country');
+	$('.pr-container').each(function () {
+		var $container = $(this);
+		var countryName = $container.data('country');
+		var $prLabel = $container.find('.pr');
+		var $incomeLabel = $container.find('.income');
 
 		updateStream.onValue(function (gameStatus) {
-			if (gameStatus.countryPRs !== undefined && gameStatus.countryPRs[countryName] !== undefined) {
-				var newPr = gameStatus.countryPRs[countryName];
-				$list.find('.pr-item').removeClass('current');
-				$list.find('.pr-item[data-pr-level=' + newPr + ']').addClass('current');
-			}
+            var newPr = gameStatus.countryPRs !== undefined && gameStatus.countryPRs[countryName] !== undefined
+				? gameStatus.countryPRs[countryName]
+	            : 0;
 
-			if (gameStatus.countryIncomes !== undefined && gameStatus.countryIncomes[countryName] !== undefined) {
-				var incomes = gameStatus.countryIncomes[countryName];
-				for (var i in incomes)
-				{
-					var income = incomes[i];
-					var prLevel = parseInt(i) + 1;
-					console.log('.pr-item[data-pr-level=' + prLevel + '] => ' + income);
-					$list.find('.pr-item[data-pr-level=' + prLevel + ']').html(income);
-				}
+            $prLabel.text(newPr);
 
-			}
+            var newIncome = gameStatus.countryIncomes !== undefined
+	            && gameStatus.countryIncomes[countryName] !== undefined
+			    && gameStatus.countryIncomes[countryName][newPr - 1] !== undefined
+				? gameStatus.countryIncomes[countryName][newPr - 1]
+	            : 0;
+
+            $incomeLabel.text(newIncome);
 		});
 	});
 
@@ -88,6 +101,7 @@ $(function () {
 			if (gameStatus.turn !== undefined) {
 				$turnContainer.html('Turn ' + gameStatus.turn)
 			}
+
 		});
 	});
 
@@ -122,5 +136,42 @@ $(function () {
 			}
 		});
 	});
+
+	// Countdown
+	$('.turn-countdown').each(function () {
+		var $turnCountdown = $(this);
+        var phaseEnd = null;
+        var isPaused = true;
+
+        updateStream.onValue(function (gameStatus) {
+        	phaseEnd = gameStatus.phaseEnd ? new Date(gameStatus.phaseEnd) : null;
+        	isPaused = gameStatus.paused;
+        });
+
+        setInterval(
+            function () {
+                console.log(phaseEnd);
+                console.log(isPaused);
+                if (phaseEnd && !isPaused) {
+                    var now = new Date();
+                    var diff = phaseEnd.getTime() - now.getTime();
+                    var duration = humanizeDuration(diff, { largest: 1, round: true });
+
+                    console.log(duration);
+
+                    $turnCountdown.text(
+                        diff > 0
+                            ? duration
+                            : '--------'
+                    )
+                }
+
+                $turnCountdown.css('text-decoration', isPaused ? 'blink' : 'none');
+            },
+            1000
+        )
+	});
+
+
 
 });
