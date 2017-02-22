@@ -13,9 +13,10 @@ import java.time.LocalDateTime
 import _root_.play.Logger
 import akka.actor._
 import _root_.play.api.libs.json._
+import uk.co.goblinoid.twitter.Tweet
+
 import scala.concurrent.duration._
 import scala.language.postfixOps
-
 import scala.collection.immutable.SortedMap
 import scala.util.{Failure, Success, Try}
 
@@ -47,6 +48,7 @@ object GameActor {
 
   case class ToggleBold(id: BigInt, isBold: Boolean) extends GameActorMessage
 
+  case class SetFeatured(tweet: Option[Tweet]) extends GameActorMessage
 }
 
 class GameActor(stateFile: Path) extends Actor {
@@ -189,6 +191,15 @@ class GameActor(stateFile: Path) extends Actor {
     case ToggleBold(id, false) =>
       backupState(state)
       val newState = state.withBold(state.boldTweetIds.filter(_ != id))
+      stateToFile(newState)
+
+      become(buildReceive(newState, ticker))
+
+    case SetFeatured(maybeTweet) =>
+      backupState(state)
+      val newState = state.withFeatured(maybeTweet)
+      stateToFile(newState)
+
       become(buildReceive(newState, ticker))
   }
 

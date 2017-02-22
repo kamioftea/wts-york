@@ -195,4 +195,12 @@ class Status @Inject()(system: ActorSystem) extends Controller with AuthElement 
     gameActor ! ToggleBold(BigInt(id), isBold)
     Ok(Json.obj("received" -> true))
   }
+
+  def setFeatured(id: String) = Action { _ =>
+    getTweets(TweetListActor.TWEET_FETCH_AMOUNT).map(tweets => {
+      gameActor ! SetFeatured(tweets.find(_.id.toString() == id))
+    })
+
+    Ok(Json.obj("received" -> true))
+  }
 }

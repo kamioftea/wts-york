@@ -1,15 +1,13 @@
 package uk.co.goblinoid.twitter
 
 import akka.actor._
-import play.api.Logger
+import play.api.Play.current
 import play.api.libs.oauth.OAuthCalculator
 import play.api.libs.ws.WS
 import uk.co.goblinoid.util.OAuthCredentials
-import scala.concurrent.duration._
-
-import play.api.Play.current
 
 import scala.concurrent.Future
+import scala.concurrent.duration._
 
 object TweetListActor {
   def props(screenName: Option[String]) = Props(new TweetListActor(screenName))
@@ -25,6 +23,8 @@ object TweetListActor {
   case object RefreshTweetsTick extends TweetListMessages
 
   val USER_TIMELINE_URL = "https://api.twitter.com/1.1/statuses/user_timeline.json"
+
+  val TWEET_FETCH_AMOUNT = 20
 }
 
 /**
@@ -37,7 +37,7 @@ class TweetListActor(screenName: Option[String]) extends Actor
   import context._
 
   val params: Map[String, String] = Map(
-    "count" -> "20"
+    "count" -> TWEET_FETCH_AMOUNT.toString
   ) ++ ( screenName map ("screen_name" -> _))
 
   private def getTweets = OAuthCredentials.fromConfig("twitter") match {

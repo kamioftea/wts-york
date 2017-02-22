@@ -114,6 +114,8 @@ case class GameState(turn: Int,
   lazy val isStarted: Boolean = phaseEnd.isDefined && pauseStart.isEmpty
 
   def withBold(ids: Seq[BigInt]): GameState = copy(boldTweetIds = ids)
+
+  def withFeatured(maybeTweet: Option[Tweet]): GameState = copy(featuredTweet = maybeTweet)
 }
 
 object GameState {
