@@ -48,7 +48,8 @@ class Status @Inject()(system: ActorSystem) extends Controller with AuthElement 
   }
 
   def buildGameStateJson(state: GameState): JsObject = {
-    import uk.co.goblinoid.twitter.Twitter.{writesTweet, bigIntWrites}
+    import uk.co.goblinoid.twitter.BigIntFormat._
+    import uk.co.goblinoid.twitter.Twitter.writesTweet
 
     val activities = state.phase.activities map {
       a => a.group -> JsString(a.description)

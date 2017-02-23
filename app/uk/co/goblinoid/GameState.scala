@@ -126,7 +126,8 @@ object GameStateFormat {
 
   import uk.co.goblinoid.util.SortedMapFormat._
   import CountryPRFormat._
-  import twitter.Twitter._
+  import uk.co.goblinoid.twitter.BigIntFormat._
+  import twitter.TwitterInternalFormat._
 
   implicit val zonedDateTimeReads: Reads[LocalDateTime] =
     __.read[String].map(LocalDateTime.parse(_, DateTimeFormatter.ISO_DATE_TIME))
