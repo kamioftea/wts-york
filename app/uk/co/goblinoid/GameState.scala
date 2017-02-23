@@ -53,6 +53,11 @@ case class GameState(turn: Int,
     case None => this
   }
 
+  def withCountryModifier(country: String, modifier: Int): GameState = countryPRs.get(country) match {
+    case Some(currentPr) => copy(countryPRs = countryPRs.updated(country, currentPr.withModifier(modifier)))
+    case None => this
+  }
+
   def setPhase(newTurn: Int, newPhaseIndex: Int): GameState = {
     Logger.warn(s"newTurn: $newTurn, newPhaseIndex: $newPhaseIndex")
     val newPhase = Phase.phases(newPhaseIndex - 1)
@@ -160,9 +165,9 @@ object GameStateFormat {
 
 }
 
-case class CountryPR(pr: Int, incomeLevels: SortedMap[Int, Int]) {
+case class CountryPR(pr: Int, modifier: Int, incomeLevels: SortedMap[Int, Int]) {
 
-  lazy val income: Int = incomeLevels.getOrElse(pr, 0)
+  lazy val income: Int = incomeLevels.getOrElse(pr, 0) + modifier
 
   def withPr(newPr: Int): CountryPR = copy(pr = newPr)
 
@@ -173,6 +178,8 @@ case class CountryPR(pr: Int, incomeLevels: SortedMap[Int, Int]) {
 
     copy(incomeLevels = incomeLevels.updated(prToUpdate, newIncome))
   }
+
+  def withModifier(modifier: Int): CountryPR = copy(modifier = modifier)
 }
 
 object CountryPRFormat {
@@ -181,11 +188,13 @@ object CountryPRFormat {
 
   implicit val readsCountryPR: Reads[CountryPR] = (
     (JsPath \ "pr").read[Int] and
+      (JsPath \ "modifier").readNullable[Int].map(_.getOrElse(0)) and
       (JsPath \ "income_levels").read[SortedMap[Int, Int]]
     )(CountryPR.apply _)
 
   implicit val writesCountryPR: Writes[CountryPR] = (
     (JsPath \ "pr").write[Int] and
+      (JsPath \ "modifier").write[Int] and
       (JsPath \ "income_levels").write[SortedMap[Int, Int]]
     )(unlift(CountryPR.unapply))
 

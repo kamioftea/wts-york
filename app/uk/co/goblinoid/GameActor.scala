@@ -32,7 +32,7 @@ object GameActor {
 
   case class PrUpdate(country: String, pr: Int) extends GameActorMessage
 
-  case class IncomeUpdate(country: String, pr: Int, increment: Boolean) extends GameActorMessage
+  case class IncomeUpdate(country: String, modifier: Int) extends GameActorMessage
 
   case class AdvancePhase() extends GameActorMessage
 
@@ -61,16 +61,16 @@ class GameActor(stateFile: Path) extends Actor {
   val defaultState = GameState(
     turn = 1,
     phaseIndex = 0,
-    terrorLevel = 23,
+    terrorLevel = 0,
     countryPRs = SortedMap(
-      "Brazil" -> CountryPR(6, SortedMap(1 -> 3, 2 -> 5, 3 -> 7, 4 -> 9, 5 -> 12, 6 -> 14, 7 -> 16, 8 -> 18, 9 -> 20)),
-      "China" -> CountryPR(6, SortedMap(1 -> 5, 2 -> 7, 3 -> 9, 4 -> 12, 5 -> 15, 6 -> 18, 7 -> 21, 8 -> 23, 9 -> 26)),
-      "France" -> CountryPR(6, SortedMap(1 -> 4, 2 -> 6, 3 -> 8, 4 -> 10, 5 -> 13, 6 -> 15, 7 -> 17, 8 -> 19, 9 -> 21)),
-      "India" -> CountryPR(6, SortedMap(1 -> 3, 2 -> 5, 3 -> 7, 4 -> 9, 5 -> 11, 6 -> 14, 7 -> 16, 8 -> 18, 9 -> 20)),
-      "Japan" -> CountryPR(6, SortedMap(1 -> 4, 2 -> 6, 3 -> 8, 4 -> 10, 5 -> 13, 6 -> 16, 7 -> 18, 8 -> 21, 9 -> 23)),
-      "Russia" -> CountryPR(6, SortedMap(1 -> 3, 2 -> 5, 3 -> 7, 4 -> 9, 5 -> 11, 6 -> 13, 7 -> 15, 8 -> 17, 9 -> 18)),
-      "UK" -> CountryPR(6, SortedMap(1 -> 4, 2 -> 6, 3 -> 8, 4 -> 10, 5 -> 13, 6 -> 15, 7 -> 17, 8 -> 19, 9 -> 21)),
-      "US" -> CountryPR(6, SortedMap(1 -> 5, 2 -> 8, 3 -> 11, 4 -> 14, 5 -> 16, 6 -> 19, 7 -> 22, 8 -> 25, 9 -> 28))
+      "Brazil" -> CountryPR(6, 0, SortedMap(1 -> 2, 2 -> 5, 3 -> 6, 4 -> 7, 5 -> 8, 6 -> 9, 7 -> 10, 8 -> 11, 9 -> 12)),
+      "China" -> CountryPR(6, 0, SortedMap(1 -> 3, 2 -> 4, 3 -> 6, 4 -> 8, 5 -> 10, 6 -> 12, 7 -> 14, 8 -> 16, 9 -> 18)),
+      "France" -> CountryPR(6, 0, SortedMap(1 -> 2, 2 -> 5, 3 -> 6, 4 -> 7, 5 -> 8, 6 -> 9, 7 -> 10, 8 -> 11, 9 -> 12)),
+      "India" -> CountryPR(6, 0, SortedMap(1 -> 2, 2 -> 5, 3 -> 6, 4 -> 7, 5 -> 8, 6 -> 9, 7 -> 10, 8 -> 11, 9 -> 12)),
+      "Japan" -> CountryPR(6, 0, SortedMap(1 -> 3, 2 -> 5, 3 -> 6, 4 -> 8, 5 -> 9, 6 -> 10, 7 -> 12, 8 -> 13, 9 -> 14)),
+      "Russia" -> CountryPR(6, 0, SortedMap(1 -> 2, 2 -> 4, 3 -> 5, 4 -> 6, 5 -> 7, 6 -> 8, 7 -> 9, 8 -> 10, 9 -> 11)),
+      "UK" -> CountryPR(6, 0, SortedMap(1 -> 2, 2 -> 5, 3 -> 6, 4 -> 7, 5 -> 8, 6 -> 9, 7 -> 10, 8 -> 11, 9 -> 12)),
+      "US" -> CountryPR(6, 0, SortedMap(1 -> 3, 2 -> 5, 3 -> 7, 4 -> 9, 5 -> 11, 6 -> 13, 7 -> 15, 8 -> 17, 9 -> 20))
     )
   )
 
@@ -124,8 +124,8 @@ class GameActor(stateFile: Path) extends Actor {
       
       become(buildReceive(newState, ticker))
 
-    case IncomeUpdate(country, pr, increment) =>
-      val newState = state.withCountryIncome(country, pr, increment)
+    case IncomeUpdate(country, modifier) =>
+      val newState = state.withCountryModifier(country, modifier)
       stateToFile(newState)
 
       become(buildReceive(newState, ticker))

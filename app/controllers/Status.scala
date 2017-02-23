@@ -67,7 +67,7 @@ class Status @Inject()(system: ActorSystem) extends Controller with AuthElement 
       "paused" -> state.pauseStart.isDefined,
       "terrorLevel" -> state.terrorStep(-90, 90, 1),
       "countryPRs" -> state.countryPRs.mapValues(_.pr),
-      "countryIncomes" -> state.countryPRs.mapValues(_.incomeLevels.values),
+      "countryIncomes" -> state.countryPRs.mapValues(cpr => cpr.incomeLevels.values.toList.map(i => JsNumber(i + cpr.modifier))),
       "featuredTweet" -> state.featuredTweet,
       "boldTweetIds" -> state.boldTweetIds
     )
@@ -149,8 +149,7 @@ class Status @Inject()(system: ActorSystem) extends Controller with AuthElement 
     Form(
       mapping(
         "country" -> text(),
-        "pr" -> number(min = 1, max = 9),
-        "increment" -> boolean
+        "modifier" -> number()
       )(IncomeUpdate.apply)(IncomeUpdate.unapply)
     )
   }

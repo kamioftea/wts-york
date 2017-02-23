@@ -48,7 +48,8 @@ class TweetListActor(screenName: Option[String]) extends Actor
         .sign(OAuthCalculator(twitterOAuth.consumerKey, twitterOAuth.requestToken))
         .withRequestTimeout(2000)
         .get()
-        .map(result => Twitter.toTweets(result.json))
+        .map(result => Twitter.toTweets(result.json).filter(t => t.posted.getYear == 2017))
+
     case _ => Future {
       Seq()
     }

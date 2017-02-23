@@ -1,4 +1,6 @@
-@import uk.co.goblinoid.GameActor.{TerrorUpdate, PrUpdate, IncomeUpdate}
+@import uk.co.goblinoid.GameActor.TerrorUpdate
+@import uk.co.goblinoid.GameActor.PrUpdate
+@import uk.co.goblinoid.GameActor.IncomeUpdate
 @import uk.co.goblinoid.GameState
 
 @import helper._
@@ -102,45 +104,38 @@
                                 <div class="small-12 medium-2 columns">
                                     <h3 class="text-center"><small>@countryName</small></h3>
                                 </div>
-                                <div class="small-12 medium-10 columns">
+                                <div class="small-12 medium-8 columns">
                                     <ul class="small-block-grid-3 medium-block-grid-9 pr-input-list">
                                         @for(
                                             (prRank, prIncome) <- countryPR.incomeLevels;
                                             isCurrent <- Some(prRank == countryPR.pr)
                                         ) {
                                             <li class="pr-item">
-                                                <div class="row collapse">
-                                                    <div class="small-3 columns">
-                                                    @form(action = routes.Status.updateIncome()) {
-                                                        <input type="hidden" name="country" value="@countryName">
-                                                        <input type="hidden" name="pr" value="@prRank">
-                                                        <button class="button alert expand" value="false" name="increment" type="submit">
-                                                            <span class="fa fa-minus"></span>
-                                                        </button>
-                                                    }
-                                                    </div>
-                                                    <div class="small-6 columns">
-                                                    @form(action = routes.Status.updatePr()) {
-                                                        <input type="hidden" name="country" value="@countryName">
-                                                        <input type="hidden" name="pr" value="@prRank">
-                                                        <button class="button expand @{
-                                                            if(isCurrent) "primary disabled" else "secondary"
-                                                        }" type="submit">@{prRank}: @prIncome</button>
-                                                    }
-                                                    </div>
-                                                    <div class="small-3 columns">
-                                                    @form(action = routes.Status.updateIncome()) {
-                                                        <input type="hidden" name="country" value="@countryName">
-                                                        <input type="hidden" name="pr" value="@prRank">
-                                                        <button class="button success expand" value="true" name="increment" type="submit">
-                                                            <span class="fa fa-plus"></span>
-                                                        </button>
-                                                    }
-                                                    </div>
-                                                </div>
+                                                @form(action = routes.Status.updatePr()) {
+                                                    <input type="hidden" name="country" value="@countryName">
+                                                    <input type="hidden" name="pr" value="@prRank">
+                                                    <button class="button expand @{
+                                                        if(isCurrent) "primary disabled" else "secondary"
+                                                    }" type="submit">@{prRank}: @{prIncome + countryPR.modifier}</button>
+                                                }
                                             </li>
                                         }
                                     </ul>
+                                </div>
+                                <div class="small-12 medium-2 columns">
+                                @form(action = routes.Status.updateIncome()) {
+                                    <input type="hidden" name="country" value="@countryName">
+                                    <div class="row collapse">
+                                        <div class="small-8 columns">
+                                            <input type="number" name="modifier" value="@countryPR.modifier" title="modifier" />
+                                        </div>
+                                        <div class="small-4 columns">
+                                            <button class="button success expand" type="submit">
+                                                <span class="fa fa-check"></span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                }
                                 </div>
                             </div>
                         </div>
