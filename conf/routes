@@ -18,8 +18,9 @@ GET     /status.json                controllers.Status.gameState
 GET     /tweets.json                controllers.Status.tweets(n: Int ?= 5)
 
 # Media admin
-GET     /media                      controllers.Status.media
+GET     /media                          controllers.Status.media
 POST    /media/toggle-bold/:id/:isBold  controllers.Status.toggleBold(id, isBold: Boolean)
+POST    /media/set-featured/:id         controllers.Status.setFeatured(id)
 
 # Ref Admin
 GET     /status/edit                controllers.Status.editGameState

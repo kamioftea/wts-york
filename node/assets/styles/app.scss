@@ -178,7 +178,17 @@ h3.pr-country-name {
     font-size: 1.5rem !important;
   }
 
-  &.text-bold p {
-    font-weight: bolder;
+  &.text-bold {
+    background-color: $ghost;
+    border: thin $jumbo solid;
+
+    p {
+      font-weight: bolder;
+    }
+  }
+
+  &.featured {
+    background-color: lighten($info-color, 15);
+    border: thin darken($info-color,5) solid;
   }
 }

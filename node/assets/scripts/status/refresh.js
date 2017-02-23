@@ -32,17 +32,29 @@ $(function () {
 		var boldTweets = [];
 
 		updateStream.onValue(function (gameState) {
-            featuredTweet = gameState.featuredTweet;
             boldTweets = gameState.boldTweetIds;
+            featuredTweet = Object.assign({}, gameState.featuredTweet, {
+                bold:     boldTweets.indexOf(gameState.featuredTweet.id) != -1,
+                featured: true
+            });
         });
 
 		tweetStream.onValue(function(tweets){
 
-            tweets = tweets.map(function (t) {
+            tweets = tweets
+	            .filter(function (val) {
+		            return !featuredTweet || featuredTweet.id != val.id
+                })
+	            .map(function (t) {
                 return Object.assign({}, t, {
                     bold:     boldTweets.indexOf(t.id) != -1
                 })
             });
+
+            if(featuredTweet)
+            {
+            	tweets = [featuredTweet].concat(tweets.slice(0, 4))
+            }
 
 			$container.html(template({tweets: tweets}))
 		})

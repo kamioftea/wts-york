@@ -2,6 +2,7 @@ $(function () {
     var tweetUrl = '/tweets.json?n=20'; //todo reverse routing in JS
     var stateUrl = '/status.json'; //todo reverse routing in JS
     var toggleBoldUrl = '/media/toggle-bold'; //todo reverse routing in JS
+    var setFeaturedUrl = '/media/set-featured'; //todo reverse routing in JS
     var interval = 1000; // 1 second
 
     function getAjaxResponse(request) {
@@ -51,6 +52,18 @@ $(function () {
                       toggleBoldUrl,
                       tweet.data('tweetId'),
                       tweet.hasClass('text-bold') ? 'false' : 'true'
+                  ].join('/'),
+            type: 'post'
+        })
+    });
+
+    $container.on('click', '.set-featured', function (ev) {
+        ev.preventDefault();
+        var tweet = $(this).closest('.tweet');
+        $.ajax({
+            url:  [
+                      setFeaturedUrl,
+                      tweet.hasClass('featured') ? 'clear' : tweet.data('tweetId')
                   ].join('/'),
             type: 'post'
         })
